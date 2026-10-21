@@ -1,11 +1,24 @@
-# .NET / Backend
-**/bin/
-**/obj/
-**/.vs/
-
-# Node / Frontend (por si acaso)
-**/node_modules/
-
-# Entornos y configuración local
+# Secretos
 .env
-.DS_Store
+appsettings.Development.json
+appsettings.*.local.json
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Docker / datos
+*.mdf
+*.ldf
