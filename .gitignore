@@ -1,0 +1,11 @@
+# .NET / Backend
+**/bin/
+**/obj/
+**/.vs/
+
+# Node / Frontend (por si acaso)
+**/node_modules/
+
+# Entornos y configuración local
+.env
+.DS_Store

@@ -1,0 +1,21 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: edumonitor_db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=PasswordSeguro123*
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssqldata:/var/opt/mssql
+    networks:
+      - edumonitor-net
+
+volumes:
+  mssqldata:
+
+networks:
+  edumonitor-net:
+    driver: bridge
