@@ -1,0 +1,1581 @@
+openapi: 3.0.3
+info:
+  title: EduMonitor AI - REST API
+  description: API del sistema inteligente de seguimiento y análisis del rendimiento académico (UTA).
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Servidor de desarrollo local
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CursoId:
+      name: cursoId
+      in: path
+      required: true
+      description: Identificador del curso (debe pertenecer al docente autenticado).
+      schema:
+        type: integer
+    ActividadId:
+      name: id
+      in: path
+      required: true
+      description: Identificador de la actividad.
+      schema:
+        type: integer
+    ActividadIdPath:
+      name: actividadId
+      in: path
+      required: true
+      description: Identificador de la actividad.
+      schema:
+        type: integer
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          format: email
+          example: docente@edumonitor.local
+        password:
+          type: string
+          format: password
+          example: Docente.UTA-2026
+
+    UsuarioDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        correo:
+          type: string
+        rol:
+          type: string
+          enum: [Docente, AdministradorTecnico]
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        usuario:
+          $ref: '#/components/schemas/UsuarioDto'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    CrearCursoRequest:
+      type: object
+      required: [nombre, codigo, periodo, docenteId]
+      properties:
+        nombre:
+          type: string
+          example: Bases de Datos
+        codigo:
+          type: string
+          example: BD-301
+        periodo:
+          type: string
+          example: Periodo 2026-A
+        escalaCalificacion:
+          type: number
+          default: 20.0
+        docenteId:
+          type: integer
+          example: 2
+        paralelo:
+          type: string
+          example: 'Paralelo "A" - Tercer Semestre'
+
+    EditarCursoRequest:
+      type: object
+      required: [nombre, codigo, periodo]
+      properties:
+        nombre:
+          type: string
+        codigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+        docenteId:
+          type: integer
+        paralelo:
+          type: string
+
+    CursoDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        docenteId:
+          type: integer
+        docenteNombre:
+          type: string
+        nombre:
+          type: string
+        codigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+        paralelo:
+          type: string
+        totalEstudiantes:
+          type: integer
+        fechaCreacion:
+          type: string
+          format: date-time
+
+    CrearEstudianteRequest:
+      type: object
+      required: [identificacion, nombre, correo]
+      properties:
+        identificacion:
+          type: string
+          example: '1801234567'
+        nombre:
+          type: string
+          example: Mateo Sebastián Andrade
+        correo:
+          type: string
+          format: email
+          example: m.andrade@uta.edu.ec
+
+    EstudianteDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        activo:
+          type: boolean
+
+    MatricularEstudianteRequest:
+      type: object
+      required: [estudianteId]
+      properties:
+        estudianteId:
+          type: integer
+
+    MatriculaDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cursoId:
+          type: integer
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        fechaMatricula:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          example: Activa
+
+    # --- Sprint 2: actividades y calificaciones ---
+    CrearActividadRequest:
+      type: object
+      required: [nombre, tipo, componente]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: Taller de normalización
+        tipo:
+          type: string
+          minLength: 2
+          maxLength: 40
+          example: Taller
+        componente:
+          type: string
+          enum: [contacto_docente, practico_experimental, autonomo]
+          example: practico_experimental
+        parcial:
+          type: integer
+          enum: [1, 2]
+          default: 1
+        fechaEntrega:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2026-10-20T23:59:00Z'
+        puntajeMaximo:
+          type: number
+          minimum: 0.1
+          maximum: 100
+          default: 10
+          description: Puntaje máximo de la actividad (nota normalizada sobre 10 para el cálculo UTA).
+
+    EditarActividadRequest:
+      allOf:
+        - $ref: '#/components/schemas/CrearActividadRequest'
+
+    ActividadDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cursoId:
+          type: integer
+        nombre:
+          type: string
+        tipo:
+          type: string
+        componente:
+          type: string
+          enum: [contacto_docente, practico_experimental, autonomo]
+        componenteEtiqueta:
+          type: string
+        componenteEtiquetaCorta:
+          type: string
+        parcial:
+          type: integer
+          enum: [1, 2]
+        fechaEntrega:
+          type: string
+          format: date-time
+          nullable: true
+        puntajeMaximo:
+          type: number
+        totalCalificados:
+          type: integer
+        totalEstudiantes:
+          type: integer
+        vencida:
+          type: boolean
+        fechaCreacion:
+          type: string
+          format: date-time
+
+    RegistrarCalificacionItem:
+      type: object
+      required: [estudianteId, estado]
+      properties:
+        estudianteId:
+          type: integer
+        nota:
+          type: number
+          nullable: true
+          description: Obligatoria para calificada; debe estar entre 0 y el puntaje máximo.
+        estado:
+          type: string
+          enum: [calificada, nota_cero, sin_entrega, pendiente, completada]
+        observacion:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    RegistrarCalificacionesRequest:
+      type: object
+      required: [calificaciones]
+      properties:
+        calificaciones:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RegistrarCalificacionItem'
+
+    CalificacionActividadDto:
+      type: object
+      properties:
+        actividadId:
+          type: integer
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        nota:
+          type: number
+          nullable: true
+        puntajeMaximo:
+          type: number
+        estado:
+          type: string
+          enum: [calificada, nota_cero, sin_entrega, pendiente, completada]
+        estadoEtiqueta:
+          type: string
+        observacion:
+          type: string
+          nullable: true
+        fechaActualizacion:
+          type: string
+          format: date-time
+          nullable: true
+
+    FinalizacionEstudianteDto:
+      type: object
+      properties:
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        totalActividades:
+          type: integer
+        completadas:
+          type: integer
+        vencidas:
+          type: integer
+        sinEntrega:
+          type: integer
+        pendientes:
+          type: integer
+        porcentajeFinalizacion:
+          type: number
+          nullable: true
+
+    FinalizacionCursoDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        fechaCalculo:
+          type: string
+          format: date-time
+        estudiantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinalizacionEstudianteDto'
+
+    # --- Sprint 2: indicadores, ficha y análisis ---
+    DistribucionNotaDto:
+      type: object
+      properties:
+        rango:
+          type: string
+          example: 80-89
+        etiqueta:
+          type: string
+        cantidad:
+          type: integer
+        porcentaje:
+          type: number
+
+    ProgresoCursoDto:
+      type: object
+      properties:
+        totalEsperado:
+          type: integer
+        completadas:
+          type: integer
+        calificadas:
+          type: integer
+        notaCero:
+          type: integer
+        sinEntrega:
+          type: integer
+        pendientes:
+          type: integer
+        actividadesVencidas:
+          type: integer
+        porcentajeAvance:
+          type: number
+          nullable: true
+        porcentajeFinalizacionVencidas:
+          type: number
+          nullable: true
+
+    ResumenComponenteDto:
+      type: object
+      properties:
+        componente:
+          type: string
+        etiqueta:
+          type: string
+        etiquetaCorta:
+          type: string
+        parcial:
+          type: integer
+        ponderacion:
+          type: number
+        actividades:
+          type: integer
+        calificadas:
+          type: integer
+        promedioSobre10:
+          type: number
+          nullable: true
+
+    ResumenParcialDto:
+      type: object
+      properties:
+        parcial:
+          type: integer
+        promedioSobre10:
+          type: number
+          nullable: true
+        estudiantesConNota:
+          type: integer
+        estudiantesIncompletos:
+          type: integer
+        completo:
+          type: boolean
+
+    EstudianteResumenDto:
+      type: object
+      properties:
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        promedioActividades:
+          type: number
+          nullable: true
+        notaParcial1:
+          type: number
+          nullable: true
+        notaParcial2:
+          type: number
+          nullable: true
+        notaFinal:
+          type: number
+          nullable: true
+        calificadas:
+          type: integer
+        notaCero:
+          type: integer
+        sinEntrega:
+          type: integer
+        pendientes:
+          type: integer
+        completadasSinNota:
+          type: integer
+        porcentajeFinalizacion:
+          type: number
+          nullable: true
+        alertas:
+          type: integer
+
+    DashboardCursoDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+          description: Escala de la nota final del curso (por defecto 20).
+        escalaNotaFinal:
+          type: number
+        fechaCalculo:
+          type: string
+          format: date-time
+        totalMatriculados:
+          type: integer
+        actividadesTotales:
+          type: integer
+        actividadesEvaluadas:
+          type: integer
+        estudiantesConNota:
+          type: integer
+        promedioCurso:
+          type: number
+          nullable: true
+          description: Promedio ponderado normalizado a la escala del curso.
+        desviacionEstandar:
+          type: number
+          nullable: true
+        aprobadosProyectados:
+          type: integer
+        estudiantesEnRiesgo:
+          type: integer
+        distribucion:
+          type: array
+          items:
+            $ref: '#/components/schemas/DistribucionNotaDto'
+        progreso:
+          $ref: '#/components/schemas/ProgresoCursoDto'
+        componentes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumenComponenteDto'
+        parciales:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumenParcialDto'
+        estudiantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstudianteResumenDto'
+        advertencias:
+          type: array
+          items:
+            type: string
+
+    ActividadEstudianteDto:
+      type: object
+      properties:
+        actividadId:
+          type: integer
+        nombre:
+          type: string
+        tipo:
+          type: string
+        componente:
+          type: string
+        componenteEtiqueta:
+          type: string
+        componenteEtiquetaCorta:
+          type: string
+        parcial:
+          type: integer
+        fechaEntrega:
+          type: string
+          format: date-time
+          nullable: true
+        puntajeMaximo:
+          type: number
+        nota:
+          type: number
+          nullable: true
+        porcentaje:
+          type: number
+          nullable: true
+        estado:
+          type: string
+          enum: [calificada, nota_cero, sin_entrega, pendiente, completada]
+        estadoEtiqueta:
+          type: string
+        observacion:
+          type: string
+          nullable: true
+        vencida:
+          type: boolean
+
+    EvolucionNotaDto:
+      type: object
+      properties:
+        actividadId:
+          type: integer
+        etiqueta:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+          nullable: true
+        nota:
+          type: number
+          nullable: true
+        notaSobre10:
+          type: number
+          nullable: true
+        estado:
+          type: string
+
+    ComponenteEstudianteDto:
+      type: object
+      properties:
+        componente:
+          type: string
+        etiqueta:
+          type: string
+        etiquetaCorta:
+          type: string
+        parcial:
+          type: integer
+        ponderacion:
+          type: number
+        actividadesCalificadas:
+          type: integer
+        promedioSobre10:
+          type: number
+          nullable: true
+        tieneDatos:
+          type: boolean
+
+    FichaEstudianteDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        correo:
+          type: string
+        promedioActividades:
+          type: number
+          nullable: true
+        notaParcial1:
+          type: number
+          nullable: true
+        notaParcial2:
+          type: number
+          nullable: true
+        notaFinal:
+          type: number
+          nullable: true
+        parcial1Completo:
+          type: boolean
+        parcial2Completo:
+          type: boolean
+        actividadesTotales:
+          type: integer
+        calificadas:
+          type: integer
+        notaCero:
+          type: integer
+        sinEntrega:
+          type: integer
+        pendientes:
+          type: integer
+        completadas:
+          type: integer
+        porcentajeFinalizacion:
+          type: number
+          nullable: true
+        componentes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponenteEstudianteDto'
+        actividades:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActividadEstudianteDto'
+        evolucion:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvolucionNotaDto'
+        alertas:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertaDto'
+
+    ActividadAnalisisDto:
+      type: object
+      properties:
+        actividadId:
+          type: integer
+        nombre:
+          type: string
+        componente:
+          type: string
+        componenteEtiquetaCorta:
+          type: string
+        parcial:
+          type: integer
+        fechaEntrega:
+          type: string
+          format: date-time
+          nullable: true
+        puntajeMaximo:
+          type: number
+        estudiantes:
+          type: integer
+        calificados:
+          type: integer
+        promedioNota:
+          type: number
+          nullable: true
+        promedioPorcentaje:
+          type: number
+          nullable: true
+        porcentajeFinalizacion:
+          type: number
+          nullable: true
+        resultadoBajo:
+          type: boolean
+
+    TendenciaAnalisisDto:
+      type: object
+      properties:
+        actividadId:
+          type: integer
+        etiqueta:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+          nullable: true
+        promedioPorcentaje:
+          type: number
+          nullable: true
+        tendencia:
+          type: string
+          nullable: true
+          enum: [mejora, descenso, estable]
+        variacion:
+          type: number
+          nullable: true
+
+    AnalisisGrupalDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+        fechaCalculo:
+          type: string
+          format: date-time
+        totalEstudiantes:
+          type: integer
+        actividades:
+          type: integer
+        actividadesBajas:
+          type: integer
+        estudiantesEnRiesgo:
+          type: integer
+        promedioCurso:
+          type: number
+          nullable: true
+        desviacionEstandar:
+          type: number
+          nullable: true
+        tendenciaGeneral:
+          type: string
+        variacionTendencia:
+          type: number
+          nullable: true
+        detalleActividades:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActividadAnalisisDto'
+        componentes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumenComponenteDto'
+        tendencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/TendenciaAnalisisDto'
+        hallazgos:
+          type: array
+          items:
+            type: string
+        advertencias:
+          type: array
+          items:
+            type: string
+
+    # --- Sprint 2: alertas y reglas ---
+    ReglaAlertaDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        tipo:
+          type: string
+          enum: [descenso, atraso, baja_finalizacion]
+        nombre:
+          type: string
+        parametrosJson:
+          type: string
+          description: Parámetros de la regla en formato JSON.
+          example: '{"k":3,"delta":1.0}'
+        activa:
+          type: boolean
+        fechaActualizacion:
+          type: string
+          format: date-time
+
+    EditarReglaAlertaRequest:
+      type: object
+      required: [activa, parametrosJson]
+      properties:
+        activa:
+          type: boolean
+        parametrosJson:
+          type: string
+          minLength: 2
+          maxLength: 400
+          description: >-
+            JSON válido según el tipo de regla: descenso requiere k y delta;
+            atraso requiere n; baja_finalizacion requiere p (1-100).
+          example: '{"k":3,"delta":1.0}'
+
+    AlertaDto:
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum: [descenso, atraso, baja_finalizacion]
+        tipoEtiqueta:
+          type: string
+        regla:
+          type: string
+        estudianteId:
+          type: integer
+        identificacion:
+          type: string
+        nombre:
+          type: string
+        evidencia:
+          type: string
+          description: Explicación determinista de por qué se generó la alerta.
+        severidad:
+          type: string
+          enum: [alta, media, baja]
+        fechaCalculo:
+          type: string
+          format: date-time
+
+    ResumenAlertasDto:
+      type: object
+      properties:
+        total:
+          type: integer
+        descenso:
+          type: integer
+        atraso:
+          type: integer
+        bajaFinalizacion:
+          type: integer
+        estudiantesAfectados:
+          type: integer
+
+    AlertasCursoDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        escalaCalificacion:
+          type: number
+        fechaCalculo:
+          type: string
+          format: date-time
+        alertas:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertaDto'
+        resumen:
+          $ref: '#/components/schemas/ResumenAlertasDto'
+        reglas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReglaAlertaDto'
+        advertencias:
+          type: array
+          items:
+            type: string
+
+paths:
+  /api/auth/login:
+    post:
+      summary: Iniciar sesión
+      tags: [Autenticación]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Datos incompletos
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Límite de peticiones alcanzado
+
+  /api/auth/me:
+    get:
+      summary: Obtener usuario autenticado
+      tags: [Autenticación]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Datos del usuario actual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioDto'
+        '401':
+          description: No autenticado
+
+  /api/cursos:
+    get:
+      summary: Listar cursos del docente autenticado
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: periodo
+          in: query
+          required: false
+          description: Filtra por período académico exacto (HU-09).
+          schema:
+            type: string
+            example: Periodo 2026-A
+        - name: q
+          in: query
+          required: false
+          description: Busca por nombre, código o paralelo (HU-09).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de cursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoDto'
+        '401':
+          description: No autenticado
+    post:
+      summary: Crear un nuevo curso
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearCursoRequest'
+      responses:
+        '201':
+          description: Curso creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoDto'
+        '400':
+          description: Error de validación o código duplicado en el período
+
+  /api/cursos/{id}:
+    get:
+      summary: Obtener detalle de un curso propio
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalle del curso
+        '403':
+          description: Curso ajeno al docente
+        '404':
+          description: No encontrado
+    put:
+      summary: Editar un curso propio
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarCursoRequest'
+      responses:
+        '200':
+          description: Curso actualizado
+        '400':
+          description: Error de validación
+        '403':
+          description: No autorizado para este curso
+    delete:
+      summary: Eliminar un curso propio
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Curso eliminado
+        '403':
+          description: No autorizado
+        '404':
+          description: No encontrado
+
+  /api/cursos/{cursoId}/matriculas:
+    get:
+      summary: Listar estudiantes matriculados en un curso
+      tags: [Matrículas]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          description: Busca por identificación, nombre o correo del estudiante (HU-09).
+          schema:
+            type: string
+        - name: estado
+          in: query
+          required: false
+          description: Estado de matrícula; por defecto Activa. Use Todas para no filtrar.
+          schema:
+            type: string
+            default: Activa
+      responses:
+        '200':
+          description: Lista de estudiantes matriculados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatriculaDto'
+    post:
+      summary: Matricular estudiante en el curso
+      tags: [Matrículas]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatricularEstudianteRequest'
+      responses:
+        '201':
+          description: Estudiante matriculado con éxito
+        '400':
+          description: Ya se encuentra matriculado
+        '403':
+          description: Curso no pertenece al docente
+
+  /api/cursos/{cursoId}/matriculas/{estudianteId}:
+    delete:
+      summary: Desmatricular estudiante de un curso
+      tags: [Matrículas]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: estudianteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Estudiante desmatriculado
+        '403':
+          description: No autorizado
+        '404':
+          description: No encontrado
+
+  /api/estudiantes:
+    get:
+      summary: Buscar estudiantes por nombre o cédula
+      tags: [Estudiantes]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de estudiantes encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EstudianteDto'
+    post:
+      summary: Registrar nuevo estudiante
+      tags: [Estudiantes]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearEstudianteRequest'
+      responses:
+        '201':
+          description: Estudiante registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstudianteDto'
+        '400':
+          description: Cédula/Identificación duplicada
+
+  /api/cursos/periodos:
+    get:
+      summary: Listar períodos académicos disponibles
+      description: Devuelve los períodos distintos de los cursos visibles para el usuario autenticado (HU-09).
+      tags: [Cursos]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Períodos ordenados de forma descendente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: Periodo 2026-A
+
+  /api/cursos/{cursoId}/actividades:
+    get:
+      summary: Listar actividades de un curso autorizado
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Actividades ordenadas por parcial y fecha de entrega
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActividadDto'
+        '401':
+          description: No autenticado
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+    post:
+      summary: Crear una actividad evaluable
+      description: Registra una actividad con fecha de entrega, puntaje máximo y componente UTA (HU-05).
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearActividadRequest'
+      responses:
+        '201':
+          description: Actividad creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadDto'
+        '400':
+          description: Datos inválidos o componente no reconocido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+
+  /api/actividades/{id}:
+    get:
+      summary: Obtener una actividad
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActividadId'
+      responses:
+        '200':
+          description: Detalle de la actividad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadDto'
+        '403':
+          description: Actividad de un curso ajeno
+        '404':
+          description: Actividad no encontrada
+    put:
+      summary: Editar una actividad
+      description: No permite reducir el puntaje máximo por debajo de una nota ya registrada.
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActividadId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarActividadRequest'
+      responses:
+        '200':
+          description: Actividad actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActividadDto'
+        '400':
+          description: Datos inválidos o puntaje máximo incompatible con notas existentes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+        '404':
+          description: Actividad no encontrada
+    delete:
+      summary: Eliminar una actividad
+      description: Elimina la actividad y sus calificaciones asociadas.
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActividadId'
+      responses:
+        '204':
+          description: Actividad eliminada
+        '403':
+          description: No autorizado
+        '404':
+          description: Actividad no encontrada
+
+  /api/actividades/{actividadId}/calificaciones:
+    get:
+      summary: Listar calificaciones de una actividad
+      description: >-
+        Devuelve una fila por estudiante matriculado activamente. Los estudiantes sin
+        registro explícito aparecen con el estado efectivo (sin_entrega o pendiente).
+      tags: [Calificaciones]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActividadIdPath'
+      responses:
+        '200':
+          description: Calificaciones de la actividad
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalificacionActividadDto'
+        '403':
+          description: Actividad de un curso ajeno
+        '404':
+          description: Actividad no encontrada
+    post:
+      summary: Registrar o actualizar calificaciones en lote
+      description: >-
+        Aplica las reglas de estados RN-02: calificada exige nota entre 0 y el puntaje
+        máximo; nota_cero fija 0; sin_entrega, pendiente y completada no llevan nota.
+      tags: [Calificaciones]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActividadIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrarCalificacionesRequest'
+      responses:
+        '200':
+          description: Calificaciones actualizadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalificacionActividadDto'
+        '400':
+          description: Estudiante no matriculado, estado inválido, nota fuera de rango o estudiante repetido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: No autorizado
+        '404':
+          description: Actividad no encontrada
+
+  /api/cursos/{cursoId}/finalizacion:
+    get:
+      summary: Consultar finalización de actividades por estudiante
+      tags: [Actividades]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Resumen de finalización del curso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalizacionCursoDto'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+
+  /api/indicadores/curso/{cursoId}:
+    get:
+      summary: Dashboard de indicadores del curso
+      description: >-
+        Calcula promedio ponderado con escala explícita, desviación estándar,
+        distribución por rangos, progreso, resumen por componente y por parcial, y el
+        listado de estudiantes con notas proyectadas (HU-07).
+      tags: [Indicadores]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Indicadores del curso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardCursoDto'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+
+  /api/indicadores/curso/{cursoId}/estudiantes/{estudianteId}:
+    get:
+      summary: Ficha individual de seguimiento del estudiante
+      description: >-
+        Devuelve notas parciales y final (solo si ambos parciales están completos),
+        evolución de notas, estados por actividad y alertas del estudiante (HU-08).
+      tags: [Indicadores]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+        - name: estudianteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ficha del estudiante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FichaEstudianteDto'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado o estudiante no matriculado activamente
+
+  /api/alertas/curso/{cursoId}:
+    get:
+      summary: Listar alertas académicas del curso
+      description: >-
+        Genera alertas deterministas de descenso, atraso y baja finalización con
+        evidencia verificable y las reglas aplicadas. No emite etiquetas definitivas
+        sobre el estudiante (HU-10).
+      tags: [Alertas]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Alertas del curso y resumen por tipo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertasCursoDto'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+
+  /api/alertas/reglas:
+    get:
+      summary: Listar reglas de alerta configuradas
+      tags: [Alertas]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Reglas de alerta
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReglaAlertaDto'
+        '401':
+          description: No autenticado
+
+  /api/alertas/reglas/{id}:
+    put:
+      summary: Actualizar una regla de alerta
+      description: Solo el Administrador Técnico puede modificar parámetros o activar/desactivar reglas.
+      tags: [Alertas]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarReglaAlertaRequest'
+      responses:
+        '200':
+          description: Regla actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReglaAlertaDto'
+        '400':
+          description: JSON inválido o parámetros incompletos para el tipo de regla
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '404':
+          description: Regla no encontrada
+
+  /api/analisis/curso/{cursoId}:
+    get:
+      summary: Análisis grupal del curso
+      description: >-
+        Detecta actividades con resultados bajos, tendencias entre actividades y
+        hallazgos descriptivos del grupo (HU-11).
+      tags: [Análisis]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Análisis grupal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalisisGrupalDto'
+        '403':
+          description: Curso ajeno al docente autenticado
+        '404':
+          description: Curso no encontrado
+
