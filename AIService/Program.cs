@@ -1,41 +1,53 @@
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var key = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(key) || key.Length < 32)
+    throw new InvalidOperationException("Jwt:Key no está configurada o tiene menos de 32 caracteres (variable Jwt__Key).");
+
+var issuer = builder.Configuration["Jwt:Issuer"] ?? "edumonitor-auth";
+var audience = builder.Configuration["Jwt:Audience"] ?? "edumonitor-clients";
+
+// Este microservicio NO emite tokens: solo valida los que emite el backend (misma clave, issuer y audience).
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.MapInboundClaims = false;
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = "name",
+            RoleClaimType = "role"
+        };
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseHttpsRedirection();
+app.MapGet("/health", () => Results.Ok(new { status = "ok", servicio = "aiservice" }));
 
-var summaries = new[]
+app.MapGet("/api/ia/estado", (ClaimsPrincipal user) => Results.Ok(new
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    servicio = "aiservice",
+    estado = "operativo",
+    usuario = user.FindFirst("email")?.Value,
+    rol = user.FindFirst("role")?.Value
+})).RequireAuthorization();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
