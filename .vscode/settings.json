@@ -28,5 +28,6 @@
         "titleBar.inactiveBackground": "#3b057099",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#3b0570"
+    "peacock.color": "#3b0570",
+    "dotnet.defaultSolution": "EduMonitor.slnx"
 }
