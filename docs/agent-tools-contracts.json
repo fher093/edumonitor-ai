@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Herramientas del Agente EduMonitor AI (TT-04.3)",
+  "description": "Especificación JSON Schema de las 5 herramientas de consulta controladas que el modelo de IA utiliza vía function calling.",
+  "tools": [
+    {
+      "name": "listar_cursos_autorizados",
+      "description": "Devuelve la lista de cursos asignados al docente autenticado, con código, nombre, período y total de matriculados.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "description": "Opcional. Filtrar por período académico (ej. '2026-B')."
+          }
+        },
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "codigo": { "type": "string" },
+            "nombre": { "type": "string" },
+            "periodo": { "type": "string" },
+            "total_estudiantes": { "type": "integer" }
+          },
+          "required": ["id", "codigo", "nombre", "periodo", "total_estudiantes"]
+        }
+      },
+      "fallback_message": "No se encontraron cursos asignados al docente en este período."
+    },
+    {
+      "name": "obtener_calificaciones",
+      "description": "Consulta las calificaciones de los estudiantes matriculados en un curso autorizado, con opción de filtrar por estudiante o actividad.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer", "description": "ID del curso autorizado." },
+          "estudiante_id": { "type": "integer", "description": "Opcional. ID de un estudiante específico." }
+        },
+        "required": ["curso_id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer" },
+          "promedio_general": { "type": "number" },
+          "escala": { "type": "number", "example": 20.0 },
+          "calificaciones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "estudiante_id": { "type": "integer" },
+                "identificacion": { "type": "string" },
+                "nombre": { "type": "string" },
+                "nota": { "type": "number" },
+                "estado": { "type": "string", "enum": ["calificada", "nota_cero", "sin_entrega", "pendiente", "completada"] }
+              }
+            }
+          }
+        },
+        "required": ["curso_id", "calificaciones"]
+      },
+      "fallback_message": "Datos insuficientes: No hay calificaciones registradas para el curso indicado."
+    },
+    {
+      "name": "obtener_progreso",
+      "description": "Calcula el porcentaje de finalización de actividades y entregas por curso o estudiante.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer", "description": "ID del curso." },
+          "estudiante_id": { "type": "integer", "description": "Opcional. ID del estudiante." }
+        },
+        "required": ["curso_id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer" },
+          "total_actividades": { "type": "integer" },
+          "porcentaje_finalizacion": { "type": "number" }
+        },
+        "required": ["curso_id", "total_actividades", "porcentaje_finalizacion"]
+      },
+      "fallback_message": "Datos insuficientes: No existen actividades evaluables configuradas."
+    },
+    {
+      "name": "identificar_alertas",
+      "description": "Aplica las reglas deterministas RN-01 a RN-12 para listar estudiantes en riesgo (descensos, atrasos reiterados o baja finalización).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer", "description": "ID del curso." },
+          "tipo_alerta": { "type": "string", "enum": ["descenso", "atraso", "baja_finalizacion", "todas"] }
+        },
+        "required": ["curso_id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "estudiante_id": { "type": "integer" },
+            "nombre": { "type": "string" },
+            "tipo_alerta": { "type": "string" },
+            "evidencia": { "type": "string" },
+            "regla_aplicada": { "type": "string" }
+          },
+          "required": ["estudiante_id", "nombre", "tipo_alerta", "evidencia", "regla_aplicada"]
+        }
+      },
+      "fallback_message": "No se detectaron alertas académicas activas bajo las reglas configuradas."
+    },
+    {
+      "name": "generar_resumen",
+      "description": "Sintetiza los indicadores agregados del curso (distribución de calificaciones, aprobados proyectados) para fundamentar recomendaciones.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer", "description": "ID del curso." }
+        },
+        "required": ["curso_id"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "curso_id": { "type": "integer" },
+          "total_matriculados": { "type": "integer" },
+          "promedio_curso": { "type": "number" },
+          "desviacion_estandar": { "type": "number" },
+          "en_riesgo": { "type": "integer" }
+        },
+        "required": ["curso_id", "total_matriculados", "promedio_curso"]
+      },
+      "fallback_message": "Datos insuficientes para generar el resumen estadístico del curso."
+    }
+  ]
+}

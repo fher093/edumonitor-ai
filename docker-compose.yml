@@ -1,38 +1,75 @@
+name: edumonitor-ai
+
 services:
+  # ---------------- Base de datos ----------------
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: edumonitor_db
+    container_name: edumonitor-sqlserver
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${DB_SA_PASSWORD}
-      - MSSQL_PID=Developer
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Define MSSQL_SA_PASSWORD en el archivo .env}
     ports:
       - "1433:1433"
     volumes:
-      - mssqldata:/var/opt/mssql
-    networks:
-      - edumonitor-net
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 20s
+      retries: 15
+      start_period: 30s
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: edumonitor_ollama
+  # ---------------- Microservicio: API principal + autenticación ----------------
+  backend:
+    build:
+      context: ./backend
+    container_name: edumonitor-backend
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=${DB_NAME:-EduMonitor};User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en el archivo .env (mínimo 32 caracteres)}
+      Jwt__Issuer: ${JWT_ISSUER:-edumonitor-auth}
+      Jwt__Audience: ${JWT_AUDIENCE:-edumonitor-clients}
+      Jwt__ExpMinutes: ${JWT_EXP_MINUTES:-60}
+      Cors__Origins__0: "http://localhost:5173"
+      Cors__Origins__1: "http://localhost:3000"
+      Seed__Admin__Nombre: ${SEED_ADMIN_NOMBRE:-Administrador técnico}
+      Seed__Admin__Correo: ${SEED_ADMIN_CORREO:-}
+      Seed__Admin__Password: ${SEED_ADMIN_PASSWORD:-}
+      Seed__Docente__Nombre: ${SEED_DOCENTE_NOMBRE:-Docente de prueba}
+      Seed__Docente__Correo: ${SEED_DOCENTE_CORREO:-}
+      Seed__Docente__Password: ${SEED_DOCENTE_PASSWORD:-}
     ports:
-      - "11434:11434"
-    volumes:
-      - ollamadata:/root/.ollama
-    networks:
-      - edumonitor-net
+      - "5000:8080"
+
+  # ---------------- Microservicio: IA (valida el mismo JWT) ----------------
+  aiservice:
+    build:
+      context: ./AIService
+    container_name: edumonitor-aiservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en el archivo .env (mínimo 32 caracteres)}
+      Jwt__Issuer: ${JWT_ISSUER:-edumonitor-auth}
+      Jwt__Audience: ${JWT_AUDIENCE:-edumonitor-clients}
+    ports:
+      - "5100:8080"
+
+  # ---------------- Frontend React (nginx) + proxy hacia los microservicios ----------------
+  frontend:
+    build:
+      context: ./frontend
+    container_name: edumonitor-frontend
+    depends_on:
+      - backend
+      - aiservice
+    ports:
+      - "3000:80"
 
 volumes:
-  mssqldata:
-  ollamadata:
-
-networks:
-  edumonitor-net:
-    driver: bridge
+  sqlserver_data:

@@ -1,0 +1,9 @@
+Copia el contenido de esta carpeta sobre la raíz de tu proyecto edumonitor-ai (respeta las rutas).
+Archivos que REEMPLAZAN a los tuyos:
+  docker-compose.yml, backend/*, AIService/Program.cs|csproj|appsettings*.json,
+  frontend/vite.config.js, frontend/src/main.jsx, App.jsx, index.css, docs/sql/01-usuarios-roles.sql
+Archivos NUEVOS: backend.Tests/, EduMonitor.slnx, .env.example, docs/LOGIN.md, Dockerfiles, nginx.conf
+Después:
+  1) cd frontend && npm install react-router-dom
+  2) copia .env.example a .env y completa los valores (ver docs/LOGIN.md)
+  3) docker compose up --build   ->  http://localhost:3000

@@ -1,6 +1,38 @@
-@backend_HostAddress = http://localhost:5160
+@host = http://localhost:5000
 
-GET {{backend_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login como docente (usa el correo/clave definidos en SEED_DOCENTE_* de tu .env)
+# @name loginDocente
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "docente@edumonitor.local",
+  "password": "TU_CLAVE_DOCENTE"
+}
 
 ###
+@tokenDocente = {{loginDocente.response.body.$.token}}
+
+### Datos del usuario autenticado
+GET {{host}}/api/auth/me
+Authorization: Bearer {{tokenDocente}}
+
+### Docente accede a su zona (200)
+GET {{host}}/api/acceso/docente
+Authorization: Bearer {{tokenDocente}}
+
+### Docente intenta entrar a la zona del administrador (403)
+GET {{host}}/api/acceso/admin
+Authorization: Bearer {{tokenDocente}}
+
+### Credenciales inválidas (401)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "docente@edumonitor.local",
+  "password": "incorrecta"
+}
+
+### Sin token (401)
+GET {{host}}/api/auth/me
