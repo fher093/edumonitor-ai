@@ -283,6 +283,193 @@ export default function AdminHome() {
               </div>
             )}
           </section>
+
+          {/* ================= MODAL: CREAR / EDITAR CURSO (MOCKUP HU-02) ================= */}
+          {modalCursoAbierto && (
+            <div
+              className="modal-backdrop-blur"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-curso-titulo"
+              onClick={e => {
+                if (e.target === e.currentTarget && !guardando) cerrarModalCurso()
+              }}
+            >
+              <div className="modal-surface-card modal-curso-hu02">
+                <div className="modal-head-row">
+                  <div>
+                    <h3 id="modal-curso-titulo" className="modal-title" style={{ marginTop: 0 }}>
+                      {modoEdicion ? 'Editar curso' : 'Crear nuevo curso'}
+                    </h3>
+                  </div>
+                  <div className="modal-hu-badge-cluster">
+                    <span className="hu-wireframe-badge">HU-02 • Sprint 1</span>
+                    <button
+                      type="button"
+                      className="modal-close-icon-btn"
+                      onClick={cerrarModalCurso}
+                      disabled={guardando}
+                      aria-label="Cerrar ventana"
+                      title="Cerrar"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <p className="modal-subtitle" style={{ marginBottom: 0 }}>
+                  Formulario de registro y administración académica para el docente en sesión
+                </p>
+
+                <div className="hairline-divider" style={{ margin: '14px 0 20px' }} />
+
+                {mensajeFormulario.texto && (
+                  <div
+                    className={`banner-alert ${mensajeFormulario.tipo === 'ok' ? 'banner-alert-ok' : 'banner-alert-error'}`}
+                    style={{ marginBottom: '1.25rem' }}
+                  >
+                    {mensajeFormulario.texto}
+                  </div>
+                )}
+
+                <form onSubmit={guardarCurso} className="form-clean">
+                  {/* Nombre de la asignatura / curso */}
+                  <div className="form-control-item">
+                    <label htmlFor="curso-nombre">
+                      Nombre de la asignatura / curso: (*)
+                    </label>
+                    <input
+                      id="curso-nombre"
+                      type="text"
+                      required
+                      autoFocus
+                      placeholder="Ej. Bases de Datos"
+                      value={formulario.nombre}
+                      onChange={e => setFormulario({ ...formulario, nombre: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Código de curso y Período académico en dos columnas */}
+                  <div className="form-grid-split">
+                    <div className="form-control-item">
+                      <label htmlFor="curso-codigo">
+                        Código de curso: (*)
+                      </label>
+                      <input
+                        id="curso-codigo"
+                        type="text"
+                        required
+                        placeholder="EJ. BD-301"
+                        value={formulario.codigo}
+                        onChange={e => setFormulario({ ...formulario, codigo: e.target.value })}
+                      />
+                      <small className="form-hint-note">
+                        * Único por docente y período
+                      </small>
+                    </div>
+
+                    <div className="form-control-item">
+                      <label htmlFor="curso-periodo">
+                        Período académico: (*)
+                      </label>
+                      <select
+                        id="curso-periodo"
+                        value={formulario.periodo}
+                        onChange={e => setFormulario({ ...formulario, periodo: e.target.value })}
+                      >
+                        <option value="Periodo Académico 2026-A">Periodo Académico 2026-A</option>
+                        <option value="Periodo 2026-A">Periodo 2026-A</option>
+                        <option value="Periodo Académico 2026-B">Periodo Académico 2026-B</option>
+                        <option value="Octubre 2026 - Febrero 2027">Octubre 2026 - Febrero 2027</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Escala de calificación */}
+                  <div className="form-control-item">
+                    <label htmlFor="curso-escala">
+                      Escala de calificación: (*)
+                    </label>
+                    <select
+                      id="curso-escala"
+                      value={formulario.escalaCalificacion}
+                      onChange={e => setFormulario({ ...formulario, escalaCalificacion: Number(e.target.value) })}
+                    >
+                      <option value={20.0}>Escala UTA (0 a 20 puntos) - Aprobación mínima &gt;= 14</option>
+                      <option value={10.0}>Escala UTA Parcial (0 a 10 puntos) - Aprobación mínima &gt;= 7</option>
+                    </select>
+                  </div>
+
+                  {/* Docente responsable */}
+                  <div className="form-control-item">
+                    <label htmlFor="curso-docente">
+                      Docente responsable:
+                    </label>
+                    <div className="docente-select-wrapper">
+                      <select
+                        id="curso-docente"
+                        required
+                        value={formulario.docenteId}
+                        onChange={e => setFormulario({ ...formulario, docenteId: e.target.value })}
+                      >
+                        {docentes.length === 0 ? (
+                          <option value="">No hay docentes registrados</option>
+                        ) : (
+                          docentes.map(d => (
+                            <option key={d.id} value={d.id}>
+                              {d.nombre} ({d.correo})
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <span className="docente-assigned-tag">
+                        [Asignado al docente seleccionado]
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Paralelo o descripción breve */}
+                  <div className="form-control-item">
+                    <label htmlFor="curso-paralelo">
+                      Paralelo o descripción breve: (Opcional)
+                    </label>
+                    <input
+                      id="curso-paralelo"
+                      type="text"
+                      placeholder="Ej. Paralelo 'A' - Modalidad Presencial"
+                      value={formulario.paralelo}
+                      onChange={e => setFormulario({ ...formulario, paralelo: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Botones de acción */}
+                  <div className="form-actions-cluster" style={{ marginTop: '0.5rem' }}>
+                    <button
+                      type="submit"
+                      className="btn-pill btn-pill-dark"
+                      disabled={guardando || docentes.length === 0}
+                    >
+                      {guardando ? 'Guardando...' : (modoEdicion ? 'Actualizar curso' : 'Guardar curso')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-pill btn-pill-ghost"
+                      onClick={cerrarModalCurso}
+                      disabled={guardando}
+                    >
+                      Cancelar / Volver
+                    </button>
+                  </div>
+
+                  {/* Pie de modal según Mockup HU-02 */}
+                  <div className="modal-hu-footer-meta">
+                    <span>* Criterios 1, 2, 3 y 4 de HU-02 implementados en el formulario.</span>
+                    <strong>SQL Server Persistente</strong>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
