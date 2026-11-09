@@ -21,12 +21,13 @@ export default function Login() {
     e.preventDefault()
     setError('')
 
-    if (!EMAIL_RE.test(correo.trim())) return setError('Ingresa un correo electrónico válido.')
+    const correoNormalizado = correo.trim()
+    if (!EMAIL_RE.test(correoNormalizado)) return setError('Ingresa un correo electrónico válido.')
     if (!password) return setError('Ingresa tu contraseña.')
 
     setCargando(true)
     try {
-      const u = await login(correo, password)
+      const u = await login(correoNormalizado, password)
       navigate(rutaInicial(u.rol), { replace: true })
     } catch (err) {
       setError(err.message)

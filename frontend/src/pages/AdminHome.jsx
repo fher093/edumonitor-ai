@@ -331,7 +331,6 @@ export default function AdminHome() {
                     </h3>
                   </div>
                   <div className="modal-hu-badge-cluster">
-                    <span className="hu-wireframe-badge">HU-02 • Sprint 1</span>
                     <button
                       type="button"
                       className="modal-close-icon-btn"
@@ -481,11 +480,6 @@ export default function AdminHome() {
                     >
                       Cancelar / Volver
                     </button>
-                  </div>
-
-                  <div className="modal-hu-footer-meta">
-                    <span>* Criterios 1, 2, 3 y 4 de HU-02 implementados en el formulario.</span>
-                    <strong>SQL Server Persistente</strong>
                   </div>
                 </form>
               </div>

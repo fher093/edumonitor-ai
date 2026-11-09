@@ -64,6 +64,7 @@ export default function AdminReglas() {
   }, [])
 
   function actualizarCampo(id, campo, valor) {
+    setMensajes(prev => ({ ...prev, [id]: { tipo: '', texto: '' } }))
     setFormularios(prev => ({
       ...prev,
       [id]: {
@@ -74,6 +75,7 @@ export default function AdminReglas() {
   }
 
   function alternarActiva(id) {
+    setMensajes(prev => ({ ...prev, [id]: { tipo: '', texto: '' } }))
     setFormularios(prev => ({
       ...prev,
       [id]: { ...prev[id], activa: !prev[id].activa },
