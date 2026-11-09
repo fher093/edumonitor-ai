@@ -10,7 +10,6 @@ export default function AdminHome() {
   const { usuario } = useAuth()
   const location = useLocation()
 
-  // Determinar la sección activa
   const rutaActual = location.pathname
   const vista = useMemo(() => {
     if (rutaActual.includes('/auditoria')) return 'auditoria'
@@ -23,13 +22,12 @@ export default function AdminHome() {
     return 'cursos'
   }, [rutaActual])
 
-  // Lista de cursos y docentes
   const [cursos, setCursos] = useState([])
   const [docentes, setDocentes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [avisoCurso, setAvisoCurso] = useState({ tipo: '', texto: '' })
 
-  // Estado del modal y formulario
   const [modalCursoAbierto, setModalCursoAbierto] = useState(false)
   const [modoEdicion, setModoEdicion] = useState(false)
   const [cursoEditandoId, setCursoEditandoId] = useState(null)
@@ -68,6 +66,24 @@ export default function AdminHome() {
     cargarDatos()
   }, [])
 
+  useEffect(() => {
+    if (!modalCursoAbierto) return
+    const overflowPrevio = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function manejarTecla(e) {
+      if (e.key === 'Escape' && !guardando) {
+        setModalCursoAbierto(false)
+      }
+    }
+
+    window.addEventListener('keydown', manejarTecla)
+    return () => {
+      document.body.style.overflow = overflowPrevio
+      window.removeEventListener('keydown', manejarTecla)
+    }
+  }, [modalCursoAbierto, guardando])
+
   function resetearFormulario() {
     setModoEdicion(false)
     setCursoEditandoId(null)
@@ -83,6 +99,7 @@ export default function AdminHome() {
   }
 
   function abrirModalNuevoCurso() {
+    setAvisoCurso({ tipo: '', texto: '' })
     resetearFormulario()
     setModalCursoAbierto(true)
   }
@@ -93,6 +110,7 @@ export default function AdminHome() {
   }
 
   function editarCurso(curso) {
+    setAvisoCurso({ tipo: '', texto: '' })
     setModoEdicion(true)
     setCursoEditandoId(curso.id)
     setMensajeFormulario({ tipo: '', texto: '' })
@@ -127,11 +145,13 @@ export default function AdminHome() {
           method: 'PUT',
           body: payload,
         })
+        setAvisoCurso({ tipo: 'ok', texto: 'Curso actualizado correctamente en SQL Server.' })
       } else {
         await api('/api/cursos', {
           method: 'POST',
           body: payload,
         })
+        setAvisoCurso({ tipo: 'ok', texto: 'Curso creado y asignado al docente exitosamente.' })
       }
       cerrarModalCurso()
       await cargarDatos()
@@ -149,9 +169,10 @@ export default function AdminHome() {
     try {
       await api(`/api/cursos/${curso.id}`, { method: 'DELETE' })
       if (cursoEditandoId === curso.id) resetearFormulario()
+      setAvisoCurso({ tipo: 'ok', texto: `Curso "${curso.nombre}" eliminado correctamente.` })
       await cargarDatos()
     } catch (err) {
-      alert(err.message)
+      setAvisoCurso({ tipo: 'error', texto: err.message })
     }
   }
 
@@ -183,7 +204,6 @@ export default function AdminHome() {
       ) : ['dashboard', 'alertas', 'analisis', 'informe', 'agente'].includes(vista) ? (
         <ModuloPreview tipo={vista} />
       ) : (
-        /* ================= VISTA: LISTADO Y ADMINISTRACIÓN DE CURSOS ================= */
         <>
           <section className="product-surface-card">
             <div className="section-head-split">
@@ -209,6 +229,15 @@ export default function AdminHome() {
             </div>
 
             <div className="hairline-divider" />
+
+            {avisoCurso.texto && (
+              <div
+                className={`banner-alert ${avisoCurso.tipo === 'ok' ? 'banner-alert-ok' : 'banner-alert-error'}`}
+                style={{ marginBottom: '1.25rem' }}
+              >
+                {avisoCurso.texto}
+              </div>
+            )}
 
             <div className="table-header-bar">
               <div>
@@ -284,7 +313,6 @@ export default function AdminHome() {
             )}
           </section>
 
-          {/* ================= MODAL: CREAR / EDITAR CURSO (MOCKUP HU-02) ================= */}
           {modalCursoAbierto && (
             <div
               className="modal-backdrop-blur"
@@ -333,7 +361,6 @@ export default function AdminHome() {
                 )}
 
                 <form onSubmit={guardarCurso} className="form-clean">
-                  {/* Nombre de la asignatura / curso */}
                   <div className="form-control-item">
                     <label htmlFor="curso-nombre">
                       Nombre de la asignatura / curso: (*)
@@ -349,7 +376,6 @@ export default function AdminHome() {
                     />
                   </div>
 
-                  {/* Código de curso y Período académico en dos columnas */}
                   <div className="form-grid-split">
                     <div className="form-control-item">
                       <label htmlFor="curso-codigo">
@@ -385,7 +411,6 @@ export default function AdminHome() {
                     </div>
                   </div>
 
-                  {/* Escala de calificación */}
                   <div className="form-control-item">
                     <label htmlFor="curso-escala">
                       Escala de calificación: (*)
@@ -400,7 +425,6 @@ export default function AdminHome() {
                     </select>
                   </div>
 
-                  {/* Docente responsable */}
                   <div className="form-control-item">
                     <label htmlFor="curso-docente">
                       Docente responsable:
@@ -428,7 +452,6 @@ export default function AdminHome() {
                     </div>
                   </div>
 
-                  {/* Paralelo o descripción breve */}
                   <div className="form-control-item">
                     <label htmlFor="curso-paralelo">
                       Paralelo o descripción breve: (Opcional)
@@ -442,7 +465,6 @@ export default function AdminHome() {
                     />
                   </div>
 
-                  {/* Botones de acción */}
                   <div className="form-actions-cluster" style={{ marginTop: '0.5rem' }}>
                     <button
                       type="submit"
@@ -461,7 +483,6 @@ export default function AdminHome() {
                     </button>
                   </div>
 
-                  {/* Pie de modal según Mockup HU-02 */}
                   <div className="modal-hu-footer-meta">
                     <span>* Criterios 1, 2, 3 y 4 de HU-02 implementados en el formulario.</span>
                     <strong>SQL Server Persistente</strong>

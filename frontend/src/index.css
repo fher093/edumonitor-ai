@@ -1216,7 +1216,6 @@ body {
   border-radius: var(--radius-cards);
 }
 
-/* Modal de Creación y Edición de Cursos (Mockup HU-02) */
 @keyframes modalSlideUp {
   from {
     opacity: 0;
