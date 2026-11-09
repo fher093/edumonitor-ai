@@ -4,7 +4,7 @@ import { useAuth } from '../auth/useAuth.js'
 import { api } from '../api/http.js'
 import EstadoServicios from '../components/EstadoServicios.jsx'
 import ModuloPreview from '../components/ModuloPreview.jsx'
-import { IconEdit, IconTrash } from '../components/Icons.jsx'
+import { IconEdit, IconTrash, IconPlus } from '../components/Icons.jsx'
 
 export default function AdminHome() {
   const { usuario } = useAuth()
@@ -29,13 +29,14 @@ export default function AdminHome() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
-  // Estado del formulario
+  // Estado del modal y formulario
+  const [modalCursoAbierto, setModalCursoAbierto] = useState(false)
   const [modoEdicion, setModoEdicion] = useState(false)
   const [cursoEditandoId, setCursoEditandoId] = useState(null)
   const [formulario, setFormulario] = useState({
     nombre: '',
     codigo: '',
-    periodo: 'Periodo 2026-A',
+    periodo: 'Periodo Académico 2026-A',
     escalaCalificacion: 20.0,
     docenteId: '',
     paralelo: '',
@@ -74,11 +75,21 @@ export default function AdminHome() {
     setFormulario({
       nombre: '',
       codigo: '',
-      periodo: 'Periodo 2026-A',
+      periodo: 'Periodo Académico 2026-A',
       escalaCalificacion: 20.0,
       docenteId: docentes.length > 0 ? String(docentes[0].id) : '',
       paralelo: '',
     })
+  }
+
+  function abrirModalNuevoCurso() {
+    resetearFormulario()
+    setModalCursoAbierto(true)
+  }
+
+  function cerrarModalCurso() {
+    setModalCursoAbierto(false)
+    resetearFormulario()
   }
 
   function editarCurso(curso) {
@@ -93,7 +104,7 @@ export default function AdminHome() {
       docenteId: String(curso.docenteId),
       paralelo: curso.paralelo || '',
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setModalCursoAbierto(true)
   }
 
   async function guardarCurso(e) {
@@ -116,15 +127,13 @@ export default function AdminHome() {
           method: 'PUT',
           body: payload,
         })
-        setMensajeFormulario({ tipo: 'ok', texto: 'Curso actualizado correctamente.' })
       } else {
         await api('/api/cursos', {
           method: 'POST',
           body: payload,
         })
-        setMensajeFormulario({ tipo: 'ok', texto: 'Curso creado y asignado al docente exitosamente.' })
       }
-      resetearFormulario()
+      cerrarModalCurso()
       await cargarDatos()
     } catch (err) {
       setMensajeFormulario({ tipo: 'error', texto: err.message })
@@ -174,7 +183,7 @@ export default function AdminHome() {
       ) : ['dashboard', 'alertas', 'analisis', 'informe', 'agente'].includes(vista) ? (
         <ModuloPreview tipo={vista} />
       ) : (
-        /* ================= VISTA: CREAR / EDITAR CURSO ================= */
+        /* ================= VISTA: LISTADO Y ADMINISTRACIÓN DE CURSOS ================= */
         <>
           <section className="product-surface-card">
             <div className="section-head-split">
@@ -183,166 +192,31 @@ export default function AdminHome() {
                   <span className="dot-violet" />
                   <span className="tag-uta-micro">ADMINISTRACIÓN ACADÉMICA</span>
                 </div>
-                <h1 className="display-headline">
-                  {modoEdicion ? 'Editar Asignatura' : 'Crear y Asignar Asignatura'}
-                </h1>
+                <h1 className="display-headline">Administración de Cursos</h1>
                 <p className="lead-subtitle">
                   Configuración de asignaturas, códigos y docentes responsables • Administrador: <strong>{usuario?.nombre}</strong>
                 </p>
+              </div>
+              <div className="header-actions-group">
+                <button
+                  type="button"
+                  className="btn-pill btn-pill-dark"
+                  onClick={abrirModalNuevoCurso}
+                >
+                  <IconPlus size={15} /> Crear nuevo curso
+                </button>
               </div>
             </div>
 
             <div className="hairline-divider" />
 
-            {mensajeFormulario.texto && (
-              <div
-                className={`banner-alert ${mensajeFormulario.tipo === 'ok' ? 'banner-alert-ok' : 'banner-alert-error'}`}
-                style={{ marginBottom: '1.5rem' }}
-              >
-                {mensajeFormulario.texto}
-              </div>
-            )}
-
-            <form onSubmit={guardarCurso} className="form-clean">
-              {/* Nombre de la asignatura / curso */}
-              <div className="form-control-item">
-                <label htmlFor="curso-nombre">
-                  Nombre de la asignatura / curso: (*)
-                </label>
-                <input
-                  id="curso-nombre"
-                  type="text"
-                  required
-                  placeholder="Ej. Bases de Datos Avanzadas"
-                  value={formulario.nombre}
-                  onChange={e => setFormulario({ ...formulario, nombre: e.target.value })}
-                />
-              </div>
-
-              {/* Código de curso y Período académico en dos columnas */}
-              <div className="form-grid-split">
-                <div className="form-control-item">
-                  <label htmlFor="curso-codigo">
-                    Código de curso: (*)
-                  </label>
-                  <input
-                    id="curso-codigo"
-                    type="text"
-                    required
-                    placeholder="Ej. BD-301"
-                    value={formulario.codigo}
-                    onChange={e => setFormulario({ ...formulario, codigo: e.target.value })}
-                  />
-                  <small className="form-hint-note">
-                    * Código único por docente y período
-                  </small>
-                </div>
-
-                <div className="form-control-item">
-                  <label htmlFor="curso-periodo">
-                    Período académico: (*)
-                  </label>
-                  <select
-                    id="curso-periodo"
-                    value={formulario.periodo}
-                    onChange={e => setFormulario({ ...formulario, periodo: e.target.value })}
-                  >
-                    <option value="Periodo 2026-A">Periodo 2026-A</option>
-                    <option value="Periodo 2026-B">Periodo 2026-B</option>
-                    <option value="Octubre 2026 - Febrero 2027">Octubre 2026 - Febrero 2027</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Escala de calificación */}
-              <div className="form-control-item">
-                <label htmlFor="curso-escala">
-                  Escala de calificación: (*)
-                </label>
-                <select
-                  id="curso-escala"
-                  value={formulario.escalaCalificacion}
-                  onChange={e => setFormulario({ ...formulario, escalaCalificacion: Number(e.target.value) })}
-                >
-                  <option value={20.0}>Escala UTA (0 a 20 puntos) - Aprobación ≥ 14</option>
-                  <option value={10.0}>Escala UTA Parcial (0 a 10 puntos) - Aprobación ≥ 7</option>
-                </select>
-              </div>
-
-              {/* Docente responsable */}
-              <div className="form-control-item">
-                <label htmlFor="curso-docente">
-                  Docente responsable: (*)
-                </label>
-                <select
-                  id="curso-docente"
-                  required
-                  value={formulario.docenteId}
-                  onChange={e => setFormulario({ ...formulario, docenteId: e.target.value })}
-                >
-                  {docentes.length === 0 ? (
-                    <option value="">No hay docentes registrados</option>
-                  ) : (
-                    docentes.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre} ({d.correo})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-
-              {/* Paralelo / Descripción breve */}
-              <div className="form-control-item">
-                <label htmlFor="curso-paralelo">
-                  Paralelo / Descripción breve (Opcional):
-                </label>
-                <input
-                  id="curso-paralelo"
-                  type="text"
-                  placeholder='Ej. Paralelo "A" - Tercer Semestre'
-                  value={formulario.paralelo}
-                  onChange={e => setFormulario({ ...formulario, paralelo: e.target.value })}
-                />
-              </div>
-
-              {/* Botones de acción ClickUp Filled Dark CTA / Ghost */}
-              <div className="form-actions-cluster">
-                <button
-                  type="submit"
-                  className="btn-pill btn-pill-dark"
-                  disabled={guardando || docentes.length === 0}
-                >
-                  {guardando ? 'Guardando...' : (modoEdicion ? 'Actualizar Curso' : 'Guardar Curso')}
-                </button>
-                <button
-                  type="button"
-                  className="btn-pill btn-pill-ghost"
-                  onClick={resetearFormulario}
-                  disabled={guardando}
-                >
-                  Cancelar
-                </button>
-              </div>
-
-              <div className="footnote-meta" style={{ marginTop: '1.5rem' }}>
-                <span>* La información se guarda automáticamente al confirmar el formulario.</span>
-              </div>
-            </form>
-          </section>
-
-          {/* Tabla de asignaturas registradas */}
-          <section className="product-surface-card" style={{ marginTop: '2rem' }}>
             <div className="table-header-bar">
               <div>
                 <h3 className="table-title">Asignaturas en el Sistema ({cursos.length})</h3>
-                <p className="text-muted text-sm" style={{ margin: 0 }}>Listado completo de cursos registrados para el período.</p>
+                <p className="text-muted text-sm" style={{ margin: 0 }}>
+                  Listado completo de cursos registrados para el período.
+                </p>
               </div>
-              {modoEdicion && (
-                <button type="button" className="btn-pill btn-pill-ghost btn-sm" onClick={resetearFormulario}>
-                  + Nuevo Curso
-                </button>
-              )}
             </div>
 
             {cargando ? (
@@ -352,7 +226,7 @@ export default function AdminHome() {
             ) : cursos.length === 0 ? (
               <div className="state-empty-box">
                 <p className="text-muted">
-                  Aún no hay cursos creados. Utiliza el formulario superior para registrar la primera asignatura.
+                  Aún no hay cursos creados. Haz clic en "+ Crear nuevo curso" para registrar la primera asignatura.
                 </p>
               </div>
             ) : (
