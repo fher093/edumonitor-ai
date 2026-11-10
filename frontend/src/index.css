@@ -1216,6 +1216,94 @@ body {
   border-radius: var(--radius-cards);
 }
 
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-curso-hu02 {
+  max-width: 680px;
+  padding: 28px 32px 24px;
+  animation: modalSlideUp 0.18s ease-out;
+}
+
+.modal-hu-badge-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.hu-wireframe-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sometype-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-onyx);
+  background: var(--color-alabaster);
+  border: 1.5px solid var(--color-onyx);
+  border-radius: 4px;
+  padding: 4px 10px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.docente-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.docente-select-wrapper select {
+  width: 100%;
+  padding-right: 230px;
+}
+
+.docente-assigned-tag {
+  position: absolute;
+  right: 34px;
+  font-family: var(--font-sometype-mono);
+  font-size: 11px;
+  color: var(--color-ash);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.modal-hu-footer-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-bone);
+  font-size: 12px;
+  color: var(--color-ash);
+}
+
+.modal-hu-footer-meta strong {
+  font-family: var(--font-sometype-mono);
+  font-weight: 600;
+  color: var(--color-slate);
+}
+
+@media (max-width: 640px) {
+  .docente-assigned-tag {
+    display: none;
+  }
+  .docente-select-wrapper select {
+    padding-right: 36px;
+  }
+}
+
 /* ==========================================================================
    CHECKLIST COMPONENT (DESIGN.md SPECS)
    ========================================================================== */
