@@ -44,8 +44,33 @@ services:
       Seed__Docente__Nombre: ${SEED_DOCENTE_NOMBRE:-Docente de prueba}
       Seed__Docente__Correo: ${SEED_DOCENTE_CORREO:-}
       Seed__Docente__Password: ${SEED_DOCENTE_PASSWORD:-}
+      Servicios__MoodleServiceUrl: http://moodleservice:8080
+      # Sincronización automática con Moodle (RF-03): importa tareas, notas y matrículas sin intervención del administrador.
+      Moodle__SincronizacionAutomatica__Habilitada: ${MOODLE_SYNC_AUTOMATICA:-true}
+      Moodle__SincronizacionAutomatica__IntervaloMinutos: ${MOODLE_SYNC_MINUTOS:-15}
     ports:
       - "5000:8080"
+
+  # ---------------- Microservicio: integración con Moodle (RF-02 conexión / RF-03 extracción) ----------------
+  moodleservice:
+    build:
+      context: ./MoodleService
+    container_name: edumonitor-moodleservice
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=${DB_NAME:-EduMonitor};User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en el archivo .env (mínimo 32 caracteres)}
+      Jwt__Issuer: ${JWT_ISSUER:-edumonitor-auth}
+      Jwt__Audience: ${JWT_AUDIENCE:-edumonitor-clients}
+      Moodle__ClaveCifrado: ${MOODLE_SECRET_KEY:?Define MOODLE_SECRET_KEY en el archivo .env (mínimo 32 caracteres)}
+      # Conexión inicial (el administrador puede cambiarla desde la interfaz; se guarda cifrada en la BD).
+      Moodle__Url: http://moodle:8080
+      Moodle__Token: ${MOODLE_WS_TOKEN:-}
+    ports:
+      - "5200:8080"
 
   # ---------------- Microservicio: IA (valida el mismo JWT) ----------------
   aiservice:
@@ -68,8 +93,65 @@ services:
     depends_on:
       - backend
       - aiservice
+      - moodleservice
     ports:
       - "3000:80"
 
+  # ---------------- Moodle local (fuente de datos académicos, RF-02 / RF-03) ----------------
+  moodle-db:
+    image: mariadb:11.4
+    container_name: edumonitor-moodle-db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_DATABASE: moodle
+      MARIADB_USER: moodle
+      MARIADB_PASSWORD: ${MOODLE_DB_PASSWORD:?Define MOODLE_DB_PASSWORD en el archivo .env}
+      MARIADB_ROOT_PASSWORD: ${MOODLE_DB_PASSWORD}
+    volumes:
+      - moodle_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  moodle:
+    image: erseco/alpine-moodle:latest
+    container_name: edumonitor-moodle
+    depends_on:
+      moodle-db:
+        condition: service_healthy
+    environment:
+      SITE_URL: ${MOODLE_SITE_URL:-http://localhost:8081}
+      DB_TYPE: mariadb
+      DB_HOST: moodle-db
+      DB_PORT: "3306"
+      DB_NAME: moodle
+      DB_USER: moodle
+      DB_PASS: ${MOODLE_DB_PASSWORD}
+      MOODLE_SITENAME: Moodle_UTA_EduMonitor
+      MOODLE_LANGUAGE: en
+      MOODLE_USERNAME: admin
+      MOODLE_PASSWORD: ${MOODLE_ADMIN_PASSWORD:?Define MOODLE_ADMIN_PASSWORD en el archivo .env}
+      MOODLE_EMAIL: admin@moodle.local
+      AUTO_UPDATE_MOODLE: "false"
+      # Moodle escucha en 8080 dentro del contenedor y se publica en 8081: confiar en SITE_URL.
+      REVERSEPROXY: "true"
+      MOODLE_MAIL_NOREPLY_ADDRESS: noreply@moodle.local
+      # Token técnico del servicio web (se crea/actualiza en el seed; mismo valor que usa MoodleService).
+      MOODLE_WS_TOKEN: ${MOODLE_WS_TOKEN:?Define MOODLE_WS_TOKEN en el archivo .env}
+      # Habilita servicios web REST, crea el usuario técnico, el token y los cursos de prueba (idempotente).
+      POST_CONFIGURE_COMMANDS: php /opt/edumonitor/seed.php
+    volumes:
+      - moodle_data:/var/www/moodledata
+      - moodle_html:/var/www/html
+      - ./moodle:/opt/edumonitor:ro
+    ports:
+      - "8081:8080"
+
 volumes:
   sqlserver_data:
+  moodle_db_data:
+  moodle_data:
+  moodle_html:
