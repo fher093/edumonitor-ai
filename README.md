@@ -6,25 +6,31 @@ Sistema inteligente de seguimiento del rendimiento académico integrado con Mood
 
 - `backend/`    → API ASP.NET Core (autenticación, cursos, actividades, indicadores, alertas)
 - `AIService/`  → Microservicio del agente de IA (.NET + Ollama)
+- `MoodleService/` → Microservicio de integración con Moodle: conexión segura (RF-02) y extracción de datos (RF-03)
+- `moodle/`     → Script que prepara el Moodle local de demostración (servicio web, token y cursos)
 - `frontend/`   → React + Vite
-- `backend.Tests/` → Pruebas unitarias y de integración (xUnit)
+- `backend.Tests/`, `MoodleService.Tests/` → Pruebas unitarias y de integración (xUnit)
 - `docs/`       → Documentación, contratos OpenAPI y scripts SQL
+
+> **Fuente de datos:** los cursos, matriculados, actividades y notas vienen de **Moodle** y se sincronizan
+> automáticamente cada 15 minutos (o al instante con *Sincronizar ahora* en el panel del Administrador Técnico). Ver [`docs/MOODLE.md`](docs/MOODLE.md).
 
 ## Funcionalidades implementadas
 
 ### Sprint 1 — Base del sistema
 
 - Login con JWT, roles `Docente` y `AdministradorTecnico`, bloqueo por intentos fallidos.
-- Gestión de cursos, estudiantes y matrículas.
+- **Administrador técnico (HU-02):** gestiona las cuentas de los docentes (crear, editar, activar o desactivar, desbloquear y restablecer la clave), la conexión y sincronización con Moodle, las reglas de alerta y el estado de los servicios. No crea cursos ni ve notas: los cursos vienen de Moodle y se asignan al docente cuyo correo coincide.
+- Consulta de la nómina por curso (docente).
 - Acceso restringido por rol y por docente propietario del curso (RN-12).
 
 ### Sprint 2 — Núcleo académico y analítico
 
-- **Actividades y calificaciones (HU-05):** CRUD de actividades con fecha de entrega, puntaje máximo y componente UTA; registro masivo de notas y estados por estudiante.
-- **Permisos por curso (HU-06):** todo endpoint académico valida que el curso pertenezca al docente autenticado; el administrador puede acceder a todos.
+- **Actividades y calificaciones (HU-05):** consulta de las actividades sincronizadas desde Moodle (componente UTA, parcial, fecha de entrega y puntaje máximo) y de la nota y el estado efectivo de cada estudiante. Se crean y califican en Moodle; EduMonitor enlaza a Moodle para hacerlo.
+- **Permisos por curso (HU-06):** todo endpoint académico valida que el curso pertenezca al docente autenticado; el administrador técnico no accede a notas, estudiantes ni indicadores (mínimo privilegio).
 - **Dashboard (HU-07):** promedio ponderado con escala explícita, desviación estándar, distribución por rangos, progreso, resumen por componente y por parcial.
 - **Ficha individual (HU-08):** evolución de notas, estados por actividad, componentes, nota parcial/final y alertas del estudiante.
-- **Filtros (HU-09):** selección de período, búsqueda de cursos y búsqueda de estudiantes por nombre, cédula o correo.
+- **Filtros (HU-09):** selección de período, búsqueda de cursos y búsqueda y filtro de estudiantes en el dashboard (con alertas, nota final < 14, sin entrega o nota final pendiente). Cada pantalla muestra la fuente y la fecha de los datos (RNF-08). Prototipo del chat y del informe: [`docs/PROTOTIPO_CHAT_INFORME.md`](docs/PROTOTIPO_CHAT_INFORME.md).
 - **Alertas configurables (HU-10):** reglas deterministas de descenso, atraso y baja finalización con evidencia verificable.
 - **Análisis grupal (HU-11):** actividades con resultados bajos, tendencias entre actividades y hallazgos descriptivos.
 
@@ -117,21 +123,23 @@ El backend aplica migraciones/DDL y siembra datos de demostración al iniciar en
 | GET | `/api/auth/me` | Autenticado | Usuario autenticado. |
 | GET | `/api/cursos?periodo=&q=` | Docente / Admin | Cursos filtrados por período y texto. |
 | GET | `/api/cursos/periodos` | Docente / Admin | Períodos disponibles. |
-| GET | `/api/cursos/{cursoId}/matriculas?q=&estado=` | Docente / Admin | Nómina filtrable. |
-| GET | `/api/cursos/{cursoId}/actividades` | Docente / Admin | Actividades del curso. |
-| POST | `/api/cursos/{cursoId}/actividades` | Docente / Admin | Crear actividad. |
-| GET | `/api/actividades/{id}` | Docente / Admin | Detalle de actividad. |
-| PUT | `/api/actividades/{id}` | Docente / Admin | Editar actividad. |
-| DELETE | `/api/actividades/{id}` | Docente / Admin | Eliminar actividad y sus notas. |
-| GET | `/api/actividades/{actividadId}/calificaciones` | Docente / Admin | Nómina con estado efectivo. |
-| POST | `/api/actividades/{actividadId}/calificaciones` | Docente / Admin | Upsert masivo de notas y estados. |
-| GET | `/api/cursos/{cursoId}/finalizacion` | Docente / Admin | Finalización por estudiante. |
-| GET | `/api/indicadores/curso/{cursoId}` | Docente / Admin | Dashboard del curso. |
-| GET | `/api/indicadores/curso/{cursoId}/estudiantes/{estudianteId}` | Docente / Admin | Ficha individual. |
-| GET | `/api/alertas/curso/{cursoId}` | Docente / Admin | Alertas con evidencia. |
+| GET | `/api/cursos/{cursoId}/matriculas?q=&estado=` | Docente propietario | Nómina filtrable. |
+| GET | `/api/cursos/{cursoId}/actividades` | Docente propietario | Actividades del curso. |
+| GET | `/api/actividades/{id}` | Docente propietario | Detalle de actividad. |
+| GET | `/api/actividades/{actividadId}/calificaciones` | Docente propietario | Nómina con estado efectivo. |
+| GET | `/api/cursos/{cursoId}/finalizacion` | Docente propietario | Finalización por estudiante. |
+| GET | `/api/indicadores/curso/{cursoId}` | Docente propietario | Dashboard del curso. |
+| GET | `/api/indicadores/curso/{cursoId}/estudiantes/{estudianteId}` | Docente propietario | Ficha individual. |
+| GET | `/api/alertas/curso/{cursoId}` | Docente propietario | Alertas con evidencia. |
 | GET | `/api/alertas/reglas` | Docente / Admin | Reglas configuradas. |
 | PUT | `/api/alertas/reglas/{id}` | Admin | Actualizar parámetros o estado de una regla. |
-| GET | `/api/analisis/curso/{cursoId}` | Docente / Admin | Análisis grupal. |
+| GET | `/api/analisis/curso/{cursoId}` | Docente propietario | Análisis grupal. |
+| GET | `/api/usuarios/docentes?q=` | Admin | Cuentas de docentes y cursos asignados. |
+| POST | `/api/usuarios/docentes` | Admin | Crear docente con clave temporal. |
+| PUT | `/api/usuarios/docentes/{id}` | Admin | Editar nombre y correo. |
+| PUT | `/api/usuarios/docentes/{id}/estado` | Admin | Activar o desactivar la cuenta. |
+| POST | `/api/usuarios/docentes/{id}/desbloquear` | Admin | Quitar el bloqueo por intentos fallidos. |
+| POST | `/api/usuarios/docentes/{id}/restablecer-clave` | Admin | Asignar una nueva clave temporal. |
 
 Respuestas de autorización: `401` sin token, `403` curso ajeno o rol insuficiente, `404` recurso inexistente.
 
@@ -143,9 +151,9 @@ El contrato completo con esquemas y ejemplos está en [`docs/openapi.yaml`](docs
 dotnet test EduMonitor.slnx
 ```
 
-- **54 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory).
+- **86 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory).
 - `backend.Tests/AnaliticaServiceTests.cs`: ponderación 40/30/30, nota final, estados, alertas, tendencias y escalas.
-- `backend.Tests/Sprint2EndpointsTests.cs`: CRUD de actividades, calificaciones, permisos por curso, dashboard, ficha, alertas, reglas y filtros.
+- `backend.Tests/Sprint2EndpointsTests.cs`: consulta de actividades y calificaciones en solo lectura, permisos por curso, dashboard, ficha, alertas, reglas y filtros.
 
 Validar el frontend:
 
@@ -171,6 +179,7 @@ Los scripts SQL reproducibles están en:
 - `docs/sql/03-datos-prueba-casos-criticos.sql`
 - `docs/sql/04-actividades-calificaciones.sql`
 - `docs/sql/05-reglas-alerta.sql`
+- `docs/sql/06-integracion-moodle.sql`
 
 ## Documentación adicional
 

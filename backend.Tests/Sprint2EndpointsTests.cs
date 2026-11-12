@@ -118,141 +118,78 @@ public class Sprint2EndpointsTests
         return curso.Id;
     }
 
-    private static CrearActividadRequest NuevaActividad(
-        string nombre = "Actividad de prueba",
-        string componente = ComponentesEvaluacion.Autonomo,
-        decimal puntajeMaximo = 10m,
-        int parcial = 1) =>
-        new(nombre, "Tarea", componente, parcial, DateTime.UtcNow.AddDays(-1), puntajeMaximo);
-
     [Fact]
-    public async Task Crear_listar_editar_y_eliminar_actividad()
+    public async Task Docente_consulta_actividades_y_calificaciones_del_curso()
     {
         await using var e = await CrearEscenarioAsync();
         var cursoId = await CursoPropioAsync(e);
-
-        var crear = await Enviar(e.Cliente, HttpMethod.Post,
-            $"/api/cursos/{cursoId}/actividades", e.TokenDocente, NuevaActividad());
-        Assert.Equal(HttpStatusCode.Created, crear.StatusCode);
-
-        var actividad = await crear.Content.ReadFromJsonAsync<ActividadDto>();
-        Assert.NotNull(actividad);
-        Assert.Equal(cursoId, actividad!.CursoId);
-        Assert.Equal(ComponentesEvaluacion.Autonomo, actividad.Componente);
-        Assert.True(actividad.Vencida);
-        Assert.Contains("Autónomo", actividad.ComponenteEtiquetaCorta);
 
         var lista = await Enviar(e.Cliente, HttpMethod.Get,
             $"/api/cursos/{cursoId}/actividades", e.TokenDocente);
         Assert.Equal(HttpStatusCode.OK, lista.StatusCode);
         var actividades = await lista.Content.ReadFromJsonAsync<List<ActividadDto>>();
-        Assert.Contains(actividades!, a => a.Id == actividad.Id);
+        Assert.NotEmpty(actividades!);
+        Assert.All(actividades!, a =>
+        {
+            Assert.Equal(cursoId, a.CursoId);
+            Assert.Contains(a.Componente, ComponentesEvaluacion.Todos);
+            Assert.False(string.IsNullOrWhiteSpace(a.ComponenteEtiquetaCorta));
+        });
 
-        var editar = await Enviar(e.Cliente, HttpMethod.Put,
-            $"/api/actividades/{actividad.Id}", e.TokenDocente,
-            NuevaActividad("Actividad editada", ComponentesEvaluacion.ContactoDocente, 5m, 2));
-        Assert.Equal(HttpStatusCode.OK, editar.StatusCode);
-        var editada = await editar.Content.ReadFromJsonAsync<ActividadDto>();
-        Assert.Equal("Actividad editada", editada!.Nombre);
-        Assert.Equal(5m, editada.PuntajeMaximo);
-        Assert.Equal(2, editada.Parcial);
-
-        var eliminar = await Enviar(e.Cliente, HttpMethod.Delete,
-            $"/api/actividades/{actividad.Id}", e.TokenDocente);
-        Assert.Equal(HttpStatusCode.NoContent, eliminar.StatusCode);
-
+        var actividad = actividades![0];
         var obtener = await Enviar(e.Cliente, HttpMethod.Get,
             $"/api/actividades/{actividad.Id}", e.TokenDocente);
-        Assert.Equal(HttpStatusCode.NotFound, obtener.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, obtener.StatusCode);
+
+        var notasResp = await Enviar(e.Cliente, HttpMethod.Get,
+            $"/api/actividades/{actividad.Id}/calificaciones", e.TokenDocente);
+        Assert.Equal(HttpStatusCode.OK, notasResp.StatusCode);
+        var notas = await notasResp.Content.ReadFromJsonAsync<List<CalificacionActividadDto>>();
+        Assert.Equal(actividad.TotalEstudiantes, notas!.Count);
+        Assert.All(notas, n =>
+        {
+            Assert.True(EstadosActividad.EsValido(n.Estado));
+            // Solo los estados calificados llevan nota (RN-02).
+            if (n.Estado is not (EstadosActividad.Calificada or EstadosActividad.NotaCero)) Assert.Null(n.Nota);
+        });
+
+        var inexistente = await Enviar(e.Cliente, HttpMethod.Get, "/api/actividades/999999", e.TokenDocente);
+        Assert.Equal(HttpStatusCode.NotFound, inexistente.StatusCode);
     }
 
     [Fact]
-    public async Task Crear_actividad_con_componente_invalido_devuelve_400()
-    {
-        await using var e = await CrearEscenarioAsync();
-        var cursoId = await CursoPropioAsync(e);
-
-        var resp = await Enviar(e.Cliente, HttpMethod.Post,
-            $"/api/cursos/{cursoId}/actividades", e.TokenDocente,
-            NuevaActividad(componente: "examen_final"));
-
-        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
-    }
-
-    [Fact]
-    public async Task Registrar_calificaciones_valida_nota_estado_y_matricula()
+    public async Task Actividades_y_calificaciones_son_de_solo_lectura()
     {
         await using var e = await CrearEscenarioAsync();
         var cursoId = await CursoPropioAsync(e);
         var estudianteId = await EstudianteMatriculadoAsync(e, cursoId);
+        var actividades = await (await Enviar(e.Cliente, HttpMethod.Get,
+            $"/api/cursos/{cursoId}/actividades", e.TokenDocente)).Content.ReadFromJsonAsync<List<ActividadDto>>();
+        var actividadId = actividades![0].Id;
+        var actividad = new { nombre = "Local", tipo = "Tarea", componente = "autonomo", parcial = 1, puntajeMaximo = 10 };
 
-        var crear = await Enviar(e.Cliente, HttpMethod.Post,
-            $"/api/cursos/{cursoId}/actividades", e.TokenDocente, NuevaActividad());
-        var actividad = await crear.Content.ReadFromJsonAsync<ActividadDto>();
-        var url = $"/api/actividades/{actividad!.Id}/calificaciones";
+        // Se crean, editan y califican en Moodle: EduMonitor no expone esas operaciones.
+        var intentos = new (HttpMethod Metodo, string Url, object? Cuerpo)[]
+        {
+            (HttpMethod.Post, $"/api/cursos/{cursoId}/actividades", actividad),
+            (HttpMethod.Put, $"/api/actividades/{actividadId}", actividad),
+            (HttpMethod.Delete, $"/api/actividades/{actividadId}", null),
+            (HttpMethod.Post, $"/api/actividades/{actividadId}/calificaciones",
+                new { calificaciones = new[] { new { estudianteId, nota = 5, estado = "calificada" } } })
+        };
+        foreach (var (metodo, url, cuerpo) in intentos)
+        {
+            var resp = await Enviar(e.Cliente, metodo, url, e.TokenDocente, cuerpo);
+            Assert.Equal(HttpStatusCode.MethodNotAllowed, resp.StatusCode);
+        }
 
-        // Nota fuera de rango
-        var fueraRango = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, 11m, EstadosActividad.Calificada)
-            ]));
-        Assert.Equal(HttpStatusCode.BadRequest, fueraRango.StatusCode);
-
-        // Estado inválido
-        var estadoInvalido = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, 5m, "entregado")
-            ]));
-        Assert.Equal(HttpStatusCode.BadRequest, estadoInvalido.StatusCode);
-
-        // Calificada sin nota
-        var sinNota = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, null, EstadosActividad.Calificada)
-            ]));
-        Assert.Equal(HttpStatusCode.BadRequest, sinNota.StatusCode);
-
-        // Estudiante no matriculado
-        var ajeno = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(999_999, 5m, EstadosActividad.Calificada)
-            ]));
-        Assert.Equal(HttpStatusCode.BadRequest, ajeno.StatusCode);
-
-        // Estudiante repetido en el lote
-        var repetido = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, 5m, EstadosActividad.Calificada),
-                new RegistrarCalificacionItem(estudianteId, 6m, EstadosActividad.Calificada)
-            ]));
-        Assert.Equal(HttpStatusCode.BadRequest, repetido.StatusCode);
-
-        // Registro válido
-        var valido = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, 9m, EstadosActividad.Calificada, "Buen trabajo")
-            ]));
-        Assert.Equal(HttpStatusCode.OK, valido.StatusCode);
-        var calificaciones = await valido.Content.ReadFromJsonAsync<List<CalificacionActividadDto>>();
-        var propia = Assert.Single(calificaciones!, c => c.EstudianteId == estudianteId);
-        Assert.Equal(9m, propia.Nota);
-        Assert.Equal(EstadosActividad.Calificada, propia.Estado);
-        Assert.Equal("Buen trabajo", propia.Observacion);
-
-        // Nota 0 se normaliza al estado nota_cero
-        var cero = await Enviar(e.Cliente, HttpMethod.Post, url, e.TokenDocente,
-            new RegistrarCalificacionesRequest([
-                new RegistrarCalificacionItem(estudianteId, 0m, EstadosActividad.Calificada)
-            ]));
-        Assert.Equal(HttpStatusCode.OK, cero.StatusCode);
-        var calificacionesCero = await cero.Content.ReadFromJsonAsync<List<CalificacionActividadDto>>();
-        var ceroDto = Assert.Single(calificacionesCero!, c => c.EstudianteId == estudianteId);
-        Assert.Equal(0m, ceroDto.Nota);
-        Assert.Equal(EstadosActividad.NotaCero, ceroDto.Estado);
+        // La matrícula y los estudiantes tampoco se gestionan en EduMonitor: vienen de Moodle.
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, (await Enviar(e.Cliente, HttpMethod.Post,
+            $"/api/cursos/{cursoId}/matriculas", e.TokenDocente, new { estudianteId })).StatusCode);
     }
 
     [Fact]
-    public async Task Docente_solo_accede_a_sus_propios_cursos_y_admin_a_todos()
+    public async Task Solo_el_docente_propietario_accede_a_los_datos_academicos()
     {
         await using var e = await CrearEscenarioAsync();
         var ajeno = await CrearCursoAjenoAsync(e.Factory);
@@ -272,14 +209,13 @@ public class Sprint2EndpointsTests
             Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
         }
 
-        var crear = await Enviar(e.Cliente, HttpMethod.Post,
-            $"/api/cursos/{ajeno}/actividades", e.TokenDocente, NuevaActividad());
-        Assert.Equal(HttpStatusCode.Forbidden, crear.StatusCode);
-
-        // El administrador técnico puede consultar cualquier curso.
-        var admin = await Enviar(e.Cliente, HttpMethod.Get,
-            $"/api/indicadores/curso/{ajeno}", e.TokenAdmin);
-        Assert.Equal(HttpStatusCode.OK, admin.StatusCode);
+        // El administrador técnico no accede a notas, indicadores ni estudiantes (mínimo privilegio).
+        var propio = await CursoPropioAsync(e);
+        foreach (var endpoint in endpoints.Select(x => x.Replace($"/{ajeno}", $"/{propio}")))
+        {
+            var resp = await Enviar(e.Cliente, HttpMethod.Get, endpoint, e.TokenAdmin);
+            Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+        }
 
         // Curso inexistente -> 404 (no filtra información de otros cursos).
         var inexistente = await Enviar(e.Cliente, HttpMethod.Get,

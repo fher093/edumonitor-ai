@@ -9,7 +9,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/indicadores")]
-[Authorize(Roles = $"{RolNombres.Docente},{RolNombres.AdministradorTecnico}")]
+[Authorize(Roles = RolNombres.Docente)]
 public class IndicadoresController(
     AppDbContext db,
     AnaliticaProvider analitica,

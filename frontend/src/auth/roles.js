@@ -11,5 +11,5 @@ export const ETIQUETA_ROL = {
 
 // Pantalla a la que se redirige a cada rol después de iniciar sesión
 export function rutaInicial(rol) {
-  return rol === ROLES.ADMIN ? '/admin' : '/matricula'
+  return rol === ROLES.ADMIN ? '/admin' : '/inicio'
 }

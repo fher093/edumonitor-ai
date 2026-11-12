@@ -10,6 +10,19 @@ public class JwtOptions
     public int ExpMinutes { get; set; } = 60;
 }
 
+/// <summary>
+/// Sincronización automática con Moodle (RF-03): el backend importa periódicamente los cambios
+/// hechos en Moodle (tareas, notas, matrículas) sin que el administrador tenga que pulsar un botón.
+/// </summary>
+public class SincronizacionAutomaticaOptions
+{
+    public const string Section = "Moodle:SincronizacionAutomatica";
+    public bool Habilitada { get; set; }
+    public int IntervaloMinutos { get; set; } = 15;
+    /// <summary>Espera antes de la primera ejecución (Moodle puede tardar en arrancar).</summary>
+    public int RetrasoInicialSegundos { get; set; } = 60;
+}
+
 public class AuthOptions
 {
     public const string Section = "Auth";

@@ -1,4 +1,27 @@
-# ClickUp™ — Style Reference
+# Adaptación de EduMonitor AI (lo que rige en el proyecto)
+
+> Este documento parte de la referencia de estilo de ClickUp (más abajo). EduMonitor conserva su **estructura**: pills de 9999px, base de 4px, elevación plana con líneas finas y densidad de producto. **Cambia la paleta y la tipografía** hacia un estilo minimalista inspirado en Apple: pocos colores y mucha claridad. Implementación: `frontend/src/theme.css` (tokens y piel) y `frontend/src/workspace.css` (estructura).
+
+| Decisión | Valor | Motivo |
+| --- | --- | --- |
+| Tipografía | **Geist** (texto y títulos), **Geist Mono** (códigos) | Sobria y muy legible; reemplaza a Plus Jakarta, Inter y Sometype Mono. |
+| Títulos | Semibold (600), tracking −0.025em | Peso más contenido que el extra-bold de la referencia. |
+| Fondo / superficies | `#f5f5f7` / `#ffffff` con sombra muy suave | Separa las capas sin bordes duros. |
+| Texto | `#1d1d1f` principal, `#6e6e73` secundario, `#86868b` terciario | Jerarquía con grises, no con color. |
+| Acento único | Azul `#0071e3` (acciones), `#0066cc` (enlaces) | Un solo color interactivo. |
+| Semáforo suave | Verde `#6cc49a`, ámbar `#efb75a` y rojo `#e98a93` en puntos y barras; textos atenuados (`#2f7a55`, `#8f6312`, `#b03a48`) sobre fondos casi pastel | Comunica el estado sin saltar a la vista. |
+| Estados | Etiqueta rectangular de 4px de radio, borde fino del color del estado y fondo casi imperceptible, sin punto. Los conteos se muestran como leyenda (cuadradito de 8px + texto) | Más sobrio y profesional que las cápsulas redondas con punto. |
+| Radios | Etiquetas 4px · filtros 6px · botones y buscadores 8px · tarjetas 12–16px | Evita el aspecto “todo redondeado” de plantilla. |
+| Iconos de panel | SVG de trazo de 2px dentro de un cuadro gris de 30px (ojo = requieren atención, diana = actividades a reforzar, foco = hallazgos, capas = componentes) | Identifican cada panel de un vistazo; nunca se usan emojis. |
+| Iconos de indicadores | SVG de 14px en un cuadro de 24px con el fondo tenue de su estado (check = aprobados, advertencia = en riesgo, campana = alertas, bandera = finalización, barras = promedio) | Reemplazan a los puntos de color en las tarjetas de indicadores. |
+| Paneles desplegables | Botón “+” (gira a “×”) y pie “Mostrar N más”; cerrado se ve solo lo esencial | Evita saturar la vista; el detalle está a un clic. |
+| Etiquetas | Texto de 12px en gris, en tipo de oración | Sin mayúsculas ni tipografía mono en los títulos de sección. |
+| Movimiento | Transiciones suaves de 0.2–0.45s; sin animaciones decorativas | Se retiró el borde conic animado. |
+| Estructura | Pantallas de alto fijo, paneles lista ↔ detalle, modales para el detalle secundario | Evita el scroll largo de página. |
+
+---
+
+# ClickUp™ — Style Reference (referencia original)
 > Hardworking dashboard on white marble. The page is a product brochure for a productivity tool, so the visual language borrows from the product itself: dense lists, status pills, avatar clusters, and bold typographic claims that read like a product spec sheet at exhibition scale.
 
 **Theme:** light

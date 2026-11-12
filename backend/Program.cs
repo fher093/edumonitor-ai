@@ -38,6 +38,19 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AnaliticaService>();
 builder.Services.AddScoped<AnaliticaProvider>();
 
+// ---------- Integración con Moodle (RF-03): el backend importa lo que extrae MoodleService ----------
+builder.Services.AddHttpClient<IMoodleServiceClient, MoodleServiceHttpClient>(c =>
+{
+    c.BaseAddress = new Uri((config["Servicios:MoodleServiceUrl"] ?? "http://localhost:5200").TrimEnd('/') + "/");
+    c.Timeout = TimeSpan.FromSeconds(config.GetValue("Servicios:MoodleTimeoutSegundos", 300));
+});
+builder.Services.AddScoped<MoodleImportador>();
+builder.Services.AddScoped<SincronizacionMoodleService>();
+// Caché de fotos de perfil (máx. ~50 MB; cada entrada declara su tamaño en bytes).
+builder.Services.AddMemoryCache(o => o.SizeLimit = 50 * 1024 * 1024);
+builder.Services.Configure<SincronizacionAutomaticaOptions>(config.GetSection(SincronizacionAutomaticaOptions.Section));
+builder.Services.AddHostedService<SincronizacionAutomaticaWorker>();
+
 // ---------- Autenticación / autorización ----------
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

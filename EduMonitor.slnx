@@ -2,4 +2,6 @@
   <Project Path="backend/backend.csproj" />
   <Project Path="AIService/AIService.csproj" />
   <Project Path="backend.Tests/backend.Tests.csproj" />
+  <Project Path="MoodleService.Tests/MoodleService.Tests.csproj" />
+  <Project Path="MoodleService/MoodleService.csproj" />
 </Solution>
