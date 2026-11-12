@@ -65,3 +65,16 @@ export async function api(path, { method = 'GET', body, auth = true, signal } = 
   }
   return data
 }
+
+/**
+ * Descarga un archivo binario autenticado (p. ej. una foto) y devuelve un Blob,
+ * o null si no existe. Las etiquetas <img> no pueden enviar el token por sí solas.
+ */
+export async function apiBlob(path, { signal } = {}) {
+  const s = loadSession()
+  const headers = s?.token ? { Authorization: `Bearer ${s.token}` } : {}
+  const resp = await fetch(`${BASE}${path}`, { headers, signal })
+  if (resp.status === 401) onUnauthorized()
+  if (!resp.ok) return null
+  return resp.blob()
+}

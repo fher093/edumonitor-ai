@@ -1,220 +1,215 @@
-import { useEffect, useState } from 'react'
-import { api } from '../api/http.js'
-import useCursos from '../hooks/useCursos.js'
-import SelectorCurso from '../components/SelectorCurso.jsx'
-import { fechaHora, numero, porcentaje } from '../utils/formato.js'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useCursoActivo, useDatosCurso } from '../cursos/CursoContext.jsx'
+import { Aviso, Barra, Cargando, Kpi, Modal, PageHeader, Panel, Vacio, VerMas } from '../components/ui.jsx'
+import { IconBarras, IconCampana, IconCapas, IconDiana, IconFlecha, IconFoco, IconTendencia } from '../components/Icons.jsx'
+import { fecha, fechaHora, numero, porcentaje, siglaComponente } from '../utils/formato.js'
+import { SinCursos } from './Resumen.jsx'
 
-const ESTILO_TENDENCIA = {
-  mejora: 'state-chip state-chip-ok',
-  descenso: 'state-chip state-chip-danger',
-  estable: 'state-chip state-chip-neutral',
-  'datos insuficientes': 'state-chip state-chip-neutral',
+const TONO_TENDENCIA = { mejora: 'ok', descenso: 'danger', estable: 'neutral' }
+const UMBRAL = 60
+const HALLAZGOS_VISIBLES = 3
+
+function tono(p) {
+  if (p === null || p === undefined) return 'none'
+  return p < UMBRAL ? 'danger' : p < 70 ? 'warn' : 'ok'
 }
 
+/**
+ * Análisis grupal (HU-11): logro por actividad frente al umbral del 60 %, tendencia del curso,
+ * hallazgos y componentes. Todo visible en una pantalla; el detalle de cada actividad va en un modal.
+ */
 export default function Analisis() {
-  const cursosHook = useCursos()
-  const { cursoId, cursoActivo, cargando: cargandoCursos } = cursosHook
+  const { cursos, cargando: cargandoCursos } = useCursoActivo()
+  const { datos: a, cargando, error } = useDatosCurso(id => `/api/analisis/curso/${id}`)
+  const [detalle, setDetalle] = useState(null)
 
-  const [analisis, setAnalisis] = useState(null)
-  const [cargando, setCargando] = useState(false)
-  const [error, setError] = useState('')
+  if (!cargandoCursos && cursos.length === 0) return <SinCursos />
+  if (error) return <div className="ws-page"><div className="banner-alert banner-alert-error">{error}</div></div>
+  if (!a || (cargando && !a)) return <div className="ws-page"><Cargando texto="Analizando el desempeño del grupo..." /></div>
 
-  useEffect(() => {
-    if (!cursoId) {
-      setAnalisis(null)
-      return
-    }
-    let vivo = true
-    setCargando(true)
-    setError('')
-    api(`/api/analisis/curso/${cursoId}`)
-      .then(data => {
-        if (vivo) setAnalisis(data)
-      })
-      .catch(err => {
-        if (vivo) setError(err.message)
-      })
-      .finally(() => {
-        if (vivo) setCargando(false)
-      })
-    return () => {
-      vivo = false
-    }
-  }, [cursoId])
+  const actividades = a.detalleActividades
 
   return (
-    <div className="page-container">
-      <section className="product-surface-card">
-        <div className="section-head-split">
-          <div>
-            <div className="brand-dot-pill">
-              <span className="dot-violet" />
-              <span className="tag-uta-micro">ANÁLISIS GRUPAL</span>
+    <div className="ws-page">
+      <PageHeader
+        titulo="¿Dónde se le complica el curso al grupo?"
+        datos={[
+          { etiqueta: 'Estudiantes', valor: a.totalEstudiantes },
+          { etiqueta: 'Actividades evaluadas', valor: a.actividades },
+          { etiqueta: 'Umbral de logro', valor: '60 %' },
+          { etiqueta: 'Corte', valor: fechaHora(a.fechaCalculo) },
+        ]}
+      >
+        <Aviso titulo="Datos incompletos" mensajes={a.advertencias} />
+        <span className={`ws-pill ws-pill-${TONO_TENDENCIA[a.tendenciaGeneral] ?? 'neutral'}`}>
+          Tendencia: {a.tendenciaGeneral}
+          {a.variacionTendencia !== null && ` (${a.variacionTendencia > 0 ? '+' : ''}${numero(a.variacionTendencia, 1)} pts)`}
+        </span>
+      </PageHeader>
+
+      <div className="ws-kpis ws-kpis-4">
+        <Kpi
+          etiqueta="Promedio del curso"
+          icono={<IconBarras size={14} />}
+          valor={<>{numero(a.promedioCurso)}<small>/{numero(a.escalaCalificacion, 0)}</small></>}
+          detalle={`σ ${numero(a.desviacionEstandar)} · ${a.totalEstudiantes} estudiantes`}
+          tono="brand"
+        />
+        <Kpi etiqueta="Actividades bajo el umbral" icono={<IconDiana size={14} />} valor={`${a.actividadesBajas}/${a.actividades}`} detalle="Logro menor al 60 %" tono="danger" />
+        <Kpi etiqueta="Estudiantes con alertas" icono={<IconCampana size={14} />} valor={a.estudiantesEnRiesgo} detalle="Requieren seguimiento" tono="warn" />
+        <Kpi
+          etiqueta="Variación del grupo"
+          icono={<IconTendencia size={14} />}
+          valor={a.variacionTendencia === null ? '—' : `${a.variacionTendencia > 0 ? '+' : ''}${numero(a.variacionTendencia, 1)}`}
+          detalle="Puntos de logro, primeras vs. últimas"
+        />
+      </div>
+
+      <div className="ws-grid ws-grid-analisis">
+        <Panel titulo="Logro por actividad" meta="Clic en una columna para ver el detalle · línea = 60 %" icono={<IconBarras size={16} />}>
+          {actividades.length === 0 ? (
+            <Vacio titulo="Sin actividades evaluadas" />
+          ) : (
+            <div className="ws-columns" role="list">
+              {actividades.map(act => (
+                <button
+                  key={act.actividadId}
+                  type="button"
+                  role="listitem"
+                  className="ws-column"
+                  onClick={() => setDetalle(act)}
+                  title={`${act.nombre}: ${porcentaje(act.promedioPorcentaje, 0)}`}
+                >
+                  <span className="ws-column-value">{act.promedioPorcentaje === null ? '—' : numero(act.promedioPorcentaje, 0)}</span>
+                  <span className="ws-column-track">
+                    <span className={`ws-column-fill ws-fill-${tono(act.promedioPorcentaje)}`} style={{ height: `${Math.min(100, act.promedioPorcentaje ?? 0)}%` }} />
+                  </span>
+                  <span className="ws-column-label">
+                    P{act.parcial}·{siglaComponente(act.componente)}
+                  </span>
+                </button>
+              ))}
             </div>
-            <h1 className="display-headline">Diagnóstico por Actividad y Tendencias</h1>
-            <p className="lead-subtitle">
-              Detecta dificultades estructurales del grupo comparando el rendimiento por actividad,
-              componente y evolución temporal del curso.
-            </p>
-          </div>
-          {analisis && (
-            <span className={ESTILO_TENDENCIA[analisis.tendenciaGeneral] ?? 'state-chip state-chip-neutral'}>
-              Tendencia: {analisis.tendenciaGeneral}
-            </span>
           )}
-        </div>
+        </Panel>
 
-        <div className="hairline-divider" />
-
-        <SelectorCurso cursosHook={cursosHook} />
-
-        {!cargandoCursos && !cursoId && (
-          <div className="state-empty-box">
-            <p className="text-muted">No hay asignaturas disponibles para analizar.</p>
-          </div>
-        )}
-
-        {cargando && (
-          <div className="state-empty-box">
-            <p className="text-muted">Analizando el desempeño del grupo...</p>
-          </div>
-        )}
-        {error && <div className="banner-alert banner-alert-error">{error}</div>}
-
-        {!cargando && analisis && (
-          <>
-            {analisis.advertencias?.length > 0 && (
-              <div className="banner-alert banner-alert-info">
-                <ul className="inline-warning-list">
-                  {analisis.advertencias.map((a, i) => <li key={i}>{a}</li>)}
-                </ul>
-              </div>
-            )}
-
-            <div className="kpi-grid">
-              <div className="kpi-card kpi-violet">
-                <span className="kpi-label">Promedio del curso</span>
-                <span className="kpi-value">{numero(analisis.promedioCurso)} / {numero(analisis.escalaCalificacion, 0)}</span>
-                <span className="kpi-detail">{analisis.totalEstudiantes} estudiantes</span>
-              </div>
-              <div className="kpi-card">
-                <span className="kpi-label">Desviación estándar</span>
-                <span className="kpi-value">{numero(analisis.desviacionEstandar)}</span>
-                <span className="kpi-detail">Dispersión del rendimiento del grupo</span>
-              </div>
-              <div className="kpi-card kpi-warn">
-                <span className="kpi-label">Actividades con bajo resultado</span>
-                <span className="kpi-value">{analisis.actividadesBajas}</span>
-                <span className="kpi-detail">Promedio inferior al 60 % de logro</span>
-              </div>
-              <div className="kpi-card">
-                <span className="kpi-label">Estudiantes en riesgo</span>
-                <span className="kpi-value">{analisis.estudiantesEnRiesgo}</span>
-                <span className="kpi-detail">Con alertas activas</span>
-              </div>
-            </div>
-
-            <div className="split-panels">
-              <div className="panel-box">
-                <div className="panel-head">
-                  <h3 className="panel-title">Hallazgos del análisis</h3>
-                  <span className="text-muted text-xs">Corte {fechaHora(analisis.fechaCalculo)}</span>
-                </div>
-                {analisis.hallazgos.length === 0 ? (
-                  <p className="text-muted text-sm">No hay hallazgos con los datos actuales.</p>
-                ) : (
-                  <ul className="hallazgo-list">
-                    {analisis.hallazgos.map((h, i) => (
-                      <li key={i} className="hallazgo-item">
-                        <span className="hallazgo-bullet" aria-hidden="true">◆</span>
-                        <span>{h}</span>
-                      </li>
+        <div className="ws-stack">
+          <Panel
+            titulo="Hallazgos"
+            meta="Descriptivos, calculados sin IA"
+            icono={<IconFoco size={16} />}
+            expandible={a.hallazgos.length > HALLAZGOS_VISIBLES}
+          >
+            {(abierto, abrir) =>
+              a.hallazgos.length === 0 ? (
+                <p className="ws-muted ws-small">No hay hallazgos con los datos actuales.</p>
+              ) : (
+                <>
+                  <ul className="ws-findings">
+                    {(abierto ? a.hallazgos : a.hallazgos.slice(0, HALLAZGOS_VISIBLES)).map((h, i) => (
+                      <li key={i}>{h}</li>
                     ))}
                   </ul>
-                )}
-              </div>
-
-              <div className="panel-box">
-                <div className="panel-head">
-                  <h3 className="panel-title">Evolución por actividad</h3>
-                  <span className="text-muted text-xs">
-                    Variación general: {analisis.variacionTendencia === null ? '—' : `${numero(analisis.variacionTendencia)} pts`}
-                  </span>
-                </div>
-                {analisis.tendencias.length === 0 ? (
-                  <p className="text-muted text-sm">Sin actividades para graficar.</p>
-                ) : (
-                  <div className="evolution-list">
-                    {analisis.tendencias.map(t => (
-                      <div key={t.actividadId} className="evolution-row">
-                        <span className="evolution-label" title={t.etiqueta}>{t.etiqueta}</span>
-                        <div className="distribution-track">
-                          <div
-                            className={`distribution-fill ${(t.promedioPorcentaje ?? 0) < 60 ? 'fill-0_59' : (t.promedioPorcentaje ?? 0) < 80 ? 'fill-70_79' : 'fill-90_100'}`}
-                            style={{ width: `${Math.min(100, t.promedioPorcentaje ?? 0)}%` }}
-                          />
-                        </div>
-                        <span className="evolution-value">{porcentaje(t.promedioPorcentaje, 0)}</span>
-                      </div>
-                    ))}
+                  {!abierto && <VerMas restantes={a.hallazgos.length - HALLAZGOS_VISIBLES} onClick={abrir} />}
+                </>
+              )
+            }
+          </Panel>
+          <Panel
+            titulo="Componentes UTA"
+            meta="Promedio sobre 10 · cerrado: los 3 más bajos"
+            icono={<IconCapas size={16} />}
+            expandible
+          >
+            {abierto =>
+              abierto ? (
+                [1, 2].map(p => (
+                  <div key={p} className="ws-comp-block">
+                    <span className="ws-eyebrow">Parcial {p}</span>
+                    {a.componentes
+                      .filter(c => c.parcial === p)
+                      .map(c => (
+                        <FilaComponente key={c.componente} c={c} />
+                      ))}
                   </div>
-                )}
-              </div>
-            </div>
+                ))
+              ) : (
+                <div className="ws-comp-block">
+                  {a.componentes
+                    .filter(c => c.promedioSobre10 !== null)
+                    .sort((x, y) => x.promedioSobre10 - y.promedioSobre10)
+                    .slice(0, 3)
+                    .map(c => (
+                      <FilaComponente key={`${c.parcial}-${c.componente}`} c={c} conParcial />
+                    ))}
+                </div>
+              )
+            }
+          </Panel>
+        </div>
+      </div>
 
-            <div className="panel-box panel-box-spaced">
-              <div className="panel-head">
-                <h3 className="panel-title">Detalle por actividad</h3>
-                <span className="text-muted text-xs">{cursoActivo?.nombre}</span>
+      <Modal
+        abierto={!!detalle}
+        onCerrar={() => setDetalle(null)}
+        eyebrow={detalle ? `Parcial ${detalle.parcial} · ${detalle.componenteEtiquetaCorta}` : ''}
+        titulo={detalle?.nombre ?? ''}
+        pie={
+          detalle && (
+            <Link to={`/actividades?id=${detalle.actividadId}`} className="ws-btn ws-btn-dark">
+              Ver notas de la actividad <IconFlecha size={14} />
+            </Link>
+          )
+        }
+      >
+        {detalle && (
+          <>
+            <div className="ws-mini-kpis">
+              <div className={`ws-mini-kpi ws-tone-${tono(detalle.promedioPorcentaje)}`}>
+                <span className="ws-eyebrow">Logro promedio</span>
+                <strong>{porcentaje(detalle.promedioPorcentaje, 0)}</strong>
               </div>
-              <div className="table-scroll-container">
-                <table className="product-data-table">
-                  <thead>
-                    <tr>
-                      <th>Actividad</th>
-                      <th>Componente</th>
-                      <th>Parcial</th>
-                      <th>Estudiantes</th>
-                      <th>Calificados</th>
-                      <th>Promedio</th>
-                      <th>Logro</th>
-                      <th>Finalización</th>
-                      <th>Resultado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analisis.detalleActividades.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="cell-empty-message">
-                          El curso no tiene actividades registradas.
-                        </td>
-                      </tr>
-                    ) : (
-                      analisis.detalleActividades.map(a => (
-                        <tr key={a.actividadId}>
-                          <td className="cell-student-name">{a.nombre}</td>
-                          <td>{a.componenteEtiquetaCorta}</td>
-                          <td>P{a.parcial}</td>
-                          <td>{a.estudiantes}</td>
-                          <td>{a.calificados}</td>
-                          <td>{numero(a.promedioNota)} / {numero(a.puntajeMaximo)}</td>
-                          <td>{porcentaje(a.promedioPorcentaje)}</td>
-                          <td>{porcentaje(a.porcentajeFinalizacion)}</td>
-                          <td>
-                            <span className={`state-chip ${a.resultadoBajo ? 'state-chip-danger' : 'state-chip-ok'}`}>
-                              {a.resultadoBajo ? 'Bajo el umbral' : 'Adecuado'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div className="ws-mini-kpi">
+                <span className="ws-eyebrow">Nota promedio</span>
+                <strong>
+                  {numero(detalle.promedioNota)}
+                  <small>/{numero(detalle.puntajeMaximo, 0)}</small>
+                </strong>
+              </div>
+              <div className="ws-mini-kpi">
+                <span className="ws-eyebrow">Calificados</span>
+                <strong>
+                  {detalle.calificados}/{detalle.estudiantes}
+                </strong>
+              </div>
+              <div className="ws-mini-kpi">
+                <span className="ws-eyebrow">Finalización</span>
+                <strong>{porcentaje(detalle.porcentajeFinalizacion, 0)}</strong>
               </div>
             </div>
+            <p className="ws-muted ws-small">
+              Entrega: {fecha(detalle.fechaEntrega)}.{' '}
+              {detalle.resultadoBajo
+                ? 'El grupo no alcanzó el 60 % de logro: conviene reforzar este tema.'
+                : 'El grupo supera el umbral del 60 % de logro.'}
+            </p>
           </>
         )}
-      </section>
+      </Modal>
+    </div>
+  )
+}
+
+function FilaComponente({ c, conParcial = false }) {
+  return (
+    <div className="ws-comp-row">
+      <span className="ws-comp-name">
+        {conParcial && <span className="ws-muted">P{c.parcial} · </span>}
+        {c.etiquetaCorta} <small>{numero(c.ponderacion * 100, 0)} %</small>
+      </span>
+      <Barra porcentaje={(c.promedioSobre10 ?? 0) * 10} tono={tono(c.promedioSobre10 === null ? null : c.promedioSobre10 * 10)} />
+      <span className="ws-num">{numero(c.promedioSobre10)}</span>
     </div>
   )
 }

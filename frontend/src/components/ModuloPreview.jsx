@@ -11,7 +11,7 @@ const INFO_MODULOS = {
       { titulo: 'Distribución de notas:', texto: 'Visualiza la dispersión y la desviación del rendimiento.' },
       { titulo: 'Filtros por parcial:', texto: 'Segmenta la información por período o estado de actividades.' },
     ],
-    accion: 'Gestionar matrícula',
+    accion: 'Ver nómina del curso',
     rutaAccion: '/matricula',
   },
   alertas: {
@@ -50,7 +50,7 @@ const INFO_MODULOS = {
       { titulo: 'Exportación:', texto: 'Descarga el informe en PDF para el consejo de facultad.' },
       { titulo: 'Trazabilidad:', texto: 'Conserva el registro de alertas y decisiones pedagógicas.' },
     ],
-    accion: 'Ir a matrícula',
+    accion: 'Ver nómina del curso',
     rutaAccion: '/matricula',
   },
   agente: {
@@ -72,11 +72,11 @@ const INFO_MODULOS = {
     descripcion:
       'Revisa el historial de cambios académicos, consultas y accesos por rol para mantener la trazabilidad del sistema.',
     detalles: [
-      { titulo: 'Registro de cambios:', texto: 'Historial de matrículas y modificaciones de calificaciones.' },
+      { titulo: 'Registro de cambios:', texto: 'Sincronizaciones con Moodle, cuentas de docentes y reglas de alerta.' },
       { titulo: 'Control de accesos:', texto: 'Trazabilidad de consultas por rol y herramienta utilizada.' },
       { titulo: 'Seguridad:', texto: 'Sin exposición de credenciales ni datos sensibles.' },
     ],
-    accion: 'Volver a cursos',
+    accion: 'Ir a cuentas de docentes',
     rutaAccion: '/admin',
   },
 }

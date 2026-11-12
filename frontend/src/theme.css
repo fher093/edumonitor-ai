@@ -1,0 +1,1484 @@
+/* ==========================================================================
+   EduMonitor AI — Tema minimalista (se carga al final y aplica a todo el proyecto)
+   Criterio: blanco y grises, tipografía Geist, un solo acento azul para acciones
+   y rojo únicamente cuando algo requiere atención. El estado se comunica con un
+   punto de color junto al texto, no con fondos de colores. Sin degradados.
+   ========================================================================== */
+
+:root {
+  /* Tipografía: los tokens heredados de DESIGN.md apuntan ahora a Geist. */
+  --font-plus-jakarta-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-inter: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sometype-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Neutros */
+  --color-signal-white: #ffffff;
+  --color-ink-black: #1d1d1f;
+  --color-onyx: #1d1d1f;
+  --color-carbon: #424245;
+  --color-slate: #6e6e73;
+  --color-ash: #86868b;
+  --color-fog: #aeaeb2;
+  --color-cloud: #d2d2d7;
+  --color-bone: #e5e5ea;
+  --color-mist: #f5f5f7;
+  --color-plaster: #f5f5f7;
+  --color-mercury: #f2f2f7;
+
+  /* Un solo acento (acciones y enlaces) */
+  --color-signal-blue: #0071e3;
+  --color-signal-blue-subtle: #f2f2f7;
+  --color-brand-violet: #1d1d1f;
+  --color-brand-violet-subtle: #f2f2f7;
+  --color-emerald: #34c759;
+
+  /* Semántica: el texto queda neutro; el color solo en puntos e indicadores */
+  --ws-canvas: #f5f5f7;
+  --ws-accent: #0071e3;
+  --ws-accent-hover: #0077ed;
+  --ws-link: #0066cc;
+  --ws-red: #d70015;
+  --ws-red-dot: #ff3b30;
+  --ws-amber-dot: #ff9f0a;
+  --ws-green-dot: #34c759;
+  --ws-ok: #1d1d1f;
+  --ws-ok-bg: #f2f2f7;
+  --ws-warn: #6e6e73;
+  --ws-warn-bg: #f2f2f7;
+  --ws-danger: #d70015;
+  --ws-danger-bg: #f2f2f7;
+  --ws-info: #0066cc;
+  --ws-info-bg: #f2f2f7;
+  --ws-brand: #1d1d1f;
+  --ws-brand-bg: #f2f2f7;
+  --ws-line: #e5e5ea;
+  --ws-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.18);
+}
+
+body {
+  font-family: var(--font-inter);
+  color: var(--color-ink-black);
+  background: var(--ws-canvas);
+  letter-spacing: -0.006em;
+  font-feature-settings: 'ss01' 0;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(0, 113, 227, 0.18);
+}
+
+/* ---------- Tipografía: semibold con tracking ajustado (en lugar de extra-bold) ---------- */
+.ws-page-heading h1,
+.ws-ficha-id h1,
+.ws-modal-head h2,
+.ws-course h2,
+.display-headline,
+.login-title,
+.modal-title {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.ws-page-heading h1 {
+  font-size: 28px;
+}
+
+.ws-panel-head h2,
+.ws-card-head h3,
+.ws-report h3,
+.ws-empty strong,
+.panel-title,
+.table-title {
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.ws-kpi-value,
+.ws-mini-kpi strong,
+.ws-parcial strong,
+.ws-meter-value,
+.ws-dist-value,
+.ws-course-meta dd,
+.ws-column-value,
+.ws-num,
+.ws-evidence p,
+.stat-number,
+.kpi-value {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ws-kpi-value {
+  font-size: 30px;
+}
+
+.ws-btn,
+.btn-pill {
+  font-family: var(--font-inter);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Etiquetas: texto pequeño en gris y en tipo de oración (sin mayúsculas ni mono). */
+.ws-eyebrow,
+.ws-nav-title,
+.ws-group-title,
+.ws-table th,
+.ws-course-meta dt,
+.ws-dist-label,
+.ws-column-label,
+.ws-preview-sample,
+.ws-chat-tag,
+.tag-uta-micro,
+.kpi-label,
+.product-data-table th {
+  font-family: var(--font-inter);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.ws-eyebrow {
+  font-size: 12px;
+  color: var(--color-ash);
+}
+
+.ws-table th {
+  font-size: 12px;
+}
+
+/* ---------- Superficies ---------- */
+.ws-panel,
+.ws-ficha,
+.ws-kpi,
+.ws-course,
+.ws-preview-notes,
+.ws-card,
+.product-surface-card {
+  border-color: var(--ws-line);
+  border-radius: 16px;
+}
+
+.ws-panel,
+.ws-ficha,
+.ws-kpi,
+.ws-course {
+  box-shadow: var(--ws-shadow);
+  border-color: transparent;
+}
+
+.ws-kpi::before {
+  display: none;
+}
+
+.ws-kpi {
+  padding: 16px 18px 14px;
+}
+
+.ws-kpi-danger .ws-kpi-value {
+  color: var(--ws-red);
+}
+
+.ws-panel-head,
+.ws-ficha-head,
+.ws-mini-kpis,
+.ws-tabs,
+.ws-tab-tools,
+.ws-master-tools,
+.ws-modal-head {
+  border-color: #f0f0f2;
+}
+
+.ws-list > li + li,
+.ws-table td {
+  border-color: #f2f2f4;
+}
+
+.ws-mini-kpi + .ws-mini-kpi {
+  border-color: #f0f0f2;
+}
+
+.ws-parcial,
+.ws-course-meta div {
+  background: var(--color-mist);
+  border-color: transparent;
+}
+
+/* ---------- Menú lateral claro (estilo barra lateral de macOS) ---------- */
+.app-sidebar.ws-sidebar {
+  background: rgba(250, 250, 252, 0.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-right: 1px solid var(--ws-line);
+  color: var(--color-carbon);
+}
+
+.ws-brand-mark {
+  background: var(--color-ink-black);
+  padding: 0;
+  border-radius: 8px;
+}
+
+.ws-brand-mark::before {
+  display: none;
+}
+
+.ws-brand-mark > span {
+  background: transparent;
+}
+
+.ws-brand-mark > span::after {
+  width: 8px;
+  height: 8px;
+  box-shadow: none;
+}
+
+.ws-brand-text strong {
+  color: var(--color-ink-black);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ws-brand-text em {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--color-ash);
+  font-weight: 500;
+}
+
+.ws-brand-text small {
+  font-family: var(--font-inter);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11.5px;
+  color: var(--color-ash);
+}
+
+.ws-icon-btn-dark {
+  border-color: transparent;
+  color: var(--color-slate);
+}
+
+.ws-icon-btn-dark:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-ink-black);
+}
+
+.ws-switcher-btn {
+  background: #fff;
+  border: 1px solid var(--ws-line);
+  color: var(--color-ink-black);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.ws-switcher-btn:hover,
+.ws-switcher-btn[aria-expanded='true'] {
+  background: #fff;
+  border-color: var(--color-cloud);
+}
+
+.ws-switcher-mark {
+  background: var(--color-ink-black);
+  font-family: var(--font-sometype-mono);
+  font-weight: 500;
+}
+
+.ws-switcher-meta {
+  font-family: var(--font-inter);
+  color: var(--color-ash);
+  font-size: 11.5px;
+}
+
+.ws-switcher-pop {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--ws-line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+}
+
+.ws-switcher-list button {
+  color: var(--color-ink-black);
+}
+
+.ws-switcher-list button:hover {
+  background: var(--color-mist);
+}
+
+.ws-switcher-list button.is-active {
+  background: var(--color-mercury);
+}
+
+.ws-switcher-empty {
+  color: var(--color-ash);
+}
+
+.ws-switcher-filters select {
+  background: var(--color-mist);
+  border-color: var(--ws-line);
+  color: var(--color-ink-black);
+}
+
+.ws-search-dark {
+  background: var(--color-mist);
+  border-color: var(--ws-line);
+  color: var(--color-ash);
+}
+
+.ws-search-dark:focus-within {
+  background: #fff;
+  border-color: var(--ws-accent);
+}
+
+.ws-search-dark input {
+  color: var(--color-ink-black);
+}
+
+.ws-nav-title {
+  font-size: 11.5px;
+  color: var(--color-ash);
+  padding-left: 10px;
+}
+
+.ws-nav-link {
+  color: var(--color-carbon);
+  font-weight: 450;
+  border-radius: 8px;
+}
+
+.ws-nav-link svg {
+  color: var(--color-slate);
+}
+
+.ws-nav-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-ink-black);
+}
+
+.ws-nav-link.is-active {
+  background: rgba(0, 0, 0, 0.065);
+  color: var(--color-ink-black);
+  font-weight: 600;
+}
+
+.ws-nav-link.is-active svg {
+  color: var(--color-ink-black);
+}
+
+.ws-nav-link.is-active::before {
+  display: none;
+}
+
+.ws-nav-tag {
+  font-family: var(--font-inter);
+  font-size: 10.5px;
+  letter-spacing: 0;
+  border: 0;
+  background: var(--color-mercury);
+  color: var(--color-ash);
+}
+
+/* Contador de alertas: discreto, como los contadores de Mail. */
+.ws-nav-count {
+  background: transparent;
+  color: var(--color-ash);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.ws-sidebar.collapsed .ws-nav-count {
+  background: var(--ws-red-dot);
+  color: #fff;
+}
+
+.ws-sidebar-foot {
+  border-color: var(--ws-line);
+}
+
+.ws-user-text strong {
+  color: var(--color-ink-black);
+}
+
+.ws-user-text small {
+  color: var(--color-ash);
+}
+
+/* ---------- Barra superior ---------- */
+.ws-topbar {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-color: var(--ws-line);
+}
+
+.ws-crumb-code {
+  background: transparent;
+  padding: 0;
+  color: var(--color-ash);
+  font-weight: 500;
+}
+
+.ws-crumbs strong {
+  font-weight: 600;
+}
+
+.ws-source {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-slate);
+}
+
+.ws-source svg {
+  display: none;
+}
+
+.ws-source-dot {
+  background: var(--ws-green-dot);
+  box-shadow: none;
+}
+
+/* ---------- Botones y enlaces ---------- */
+.ws-btn-dark {
+  background: var(--ws-accent);
+  color: #fff;
+}
+
+.ws-btn-dark:hover {
+  background: var(--ws-accent-hover);
+}
+
+.ws-btn-ghost {
+  background: var(--color-mercury);
+  border-color: transparent;
+  color: var(--color-ink-black);
+}
+
+.ws-btn-ghost:hover {
+  background: #e8e8ed;
+  border-color: transparent;
+  color: var(--color-ink-black);
+}
+
+.ws-link {
+  color: var(--ws-link);
+  font-weight: 500;
+}
+
+.ws-icon-btn {
+  border-color: transparent;
+  background: transparent;
+}
+
+.ws-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ---------- Estados: punto de color + texto neutro ---------- */
+.ws-pill,
+.state-chip {
+  background: transparent;
+  color: var(--color-carbon);
+  border: 0;
+  padding: 2px 0;
+  font-weight: 500;
+  font-size: 12.5px;
+  border-radius: 0;
+  gap: 6px;
+}
+
+.ws-pill::before,
+.state-chip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-fog);
+  flex-shrink: 0;
+}
+
+.state-chip {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ws-pill-ok::before,
+.state-chip-ok::before { background: var(--ws-green-dot); }
+.ws-pill-warn::before,
+.state-chip-warn::before { background: var(--ws-amber-dot); }
+.ws-pill-danger::before,
+.state-chip-danger::before { background: var(--ws-red-dot); }
+.ws-pill-info::before,
+.state-chip-info::before { background: var(--ws-accent); }
+.ws-pill-brand::before { background: var(--color-ink-black); }
+
+.ws-pill-danger,
+.state-chip-danger {
+  color: var(--ws-red);
+}
+
+/* Pills que viven en cabeceras (tendencia, "Vista previa"): cápsula gris sutil. */
+.ws-page-actions .ws-pill,
+.ws-course-top .ws-pill {
+  background: var(--color-mercury);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.ws-states {
+  gap: 4px 14px;
+}
+
+/* Siglas de componente y códigos: texto mono gris, sin fondo de color. */
+.ws-tag-comp {
+  background: var(--color-mercury);
+  color: var(--color-slate);
+  font-weight: 500;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+.ws-code {
+  background: var(--color-mist);
+  border-color: transparent;
+}
+
+/* Avatares neutros */
+.ws-avatar,
+.ws-avatar-violet,
+.ws-avatar-blue,
+.ws-avatar-teal,
+.ws-avatar-amber,
+.ws-avatar-rose,
+.ws-avatar-slate {
+  background: #e8e8ed;
+  color: var(--color-carbon);
+  font-weight: 600;
+}
+
+/* ---------- Medidores, barras y gráficos ---------- */
+.ws-meter-track,
+.ws-bar {
+  background: #ececf0;
+}
+
+.ws-fill-ok,
+.ws-fill-brand {
+  background: var(--color-ink-black);
+}
+
+.ws-fill-warn {
+  background: var(--color-fog);
+}
+
+.ws-fill-danger {
+  background: var(--ws-red-dot);
+}
+
+.ws-tone-ok,
+.ws-tone-warn {
+  color: var(--color-ink-black);
+}
+
+.ws-tone-danger {
+  color: var(--ws-red);
+}
+
+.ws-column-track {
+  background: var(--color-mist);
+}
+
+.ws-column-track::after {
+  border-top-color: var(--ws-red-dot);
+  opacity: 0.6;
+}
+
+.ws-column-fill.ws-fill-warn {
+  background: #b9b9bf;
+}
+
+/* ---------- Listas, filtros y pestañas ---------- */
+.ws-list-row:hover {
+  background: #fafafa;
+}
+
+.ws-list-row.is-selected {
+  background: var(--color-mercury);
+}
+
+.ws-list-row.is-selected::before {
+  display: none;
+}
+
+.ws-group-title {
+  background: #fff;
+  border-color: #f2f2f4;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-black);
+  padding-top: 14px;
+}
+
+.ws-severity {
+  width: 6px;
+  height: 6px;
+  align-self: center;
+  border-radius: 50%;
+}
+
+.ws-severity-danger { background: var(--ws-red-dot); }
+.ws-severity-warn { background: var(--ws-amber-dot); }
+
+.ws-dot-count {
+  background: transparent;
+  color: var(--ws-red);
+  font-weight: 600;
+  min-width: 0;
+  padding: 0;
+}
+
+.ws-dot-count::before {
+  content: '●';
+  font-size: 8px;
+  margin-right: 3px;
+  color: var(--ws-red-dot);
+}
+
+.ws-search {
+  border-color: transparent;
+  background: #f0f0f3;
+  border-radius: 10px;
+}
+
+.ws-search:focus-within {
+  background: #fff;
+  border-color: var(--ws-accent);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+/* Filtros como control segmentado. */
+.ws-chip {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-slate);
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.ws-chip:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: transparent;
+}
+
+.ws-chip.is-active {
+  background: var(--color-ink-black);
+  border-color: var(--color-ink-black);
+  color: #fff;
+}
+
+.ws-tabs button {
+  font-weight: 500;
+}
+
+.ws-tabs button.is-active::after {
+  height: 2px;
+  background: var(--color-ink-black);
+}
+
+/* ---------- Notas, evidencia y alertas ---------- */
+.ws-note,
+.ws-note-warn {
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+  color: var(--color-slate);
+}
+
+.ws-note-warn strong {
+  color: var(--color-ink-black);
+  font-weight: 600;
+}
+
+.ws-note-warn::before {
+  content: '●';
+  color: var(--ws-amber-dot);
+  font-size: 9px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.ws-evidence,
+.ws-evidence-danger,
+.ws-evidence-warn {
+  background: var(--color-mist);
+  border: 0;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.ws-evidence p {
+  font-size: 19px;
+  line-height: 1.45;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+
+.ws-alert-card {
+  border-left-width: 1px;
+  border-color: var(--ws-line);
+  position: relative;
+  padding-left: 26px;
+}
+
+.ws-alert-card::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 17px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ws-amber-dot);
+}
+
+.ws-alert-danger::before {
+  background: var(--ws-red-dot);
+}
+
+.ws-findings li::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: none;
+  top: 8px;
+  background: var(--color-fog);
+}
+
+/* ---------- Iconos de bloque y estados vacíos ---------- */
+.ws-tile-icon,
+.ws-empty-icon {
+  background: var(--color-mercury);
+  color: var(--color-ink-black);
+}
+
+.ws-spinner {
+  border-top-color: var(--color-ink-black);
+}
+
+/* ---------- Mis cursos ---------- */
+.ws-course.is-active {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px var(--color-ink-black), var(--ws-shadow);
+}
+
+.ws-course:hover {
+  transform: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 10px 28px rgba(0, 0, 0, 0.06);
+}
+
+.ws-course-code {
+  font-family: var(--font-inter);
+  color: var(--color-ash);
+}
+
+/* ---------- Vista previa del Sprint 3 ---------- */
+.ws-preview-frame {
+  background: transparent;
+  padding: 0;
+  border-radius: 16px;
+  box-shadow: var(--ws-shadow);
+}
+
+.ws-preview-bar {
+  border-color: #f0f0f2;
+}
+
+.ws-preview-sample {
+  color: var(--color-ash);
+}
+
+.ws-chat-user {
+  background: var(--ws-accent);
+}
+
+.ws-chat-bot {
+  background: var(--color-mist);
+  border: 0;
+}
+
+.ws-chat-tag,
+.ws-chat-tag-fact,
+.ws-chat-tag-inference,
+.ws-chat-tag-reco {
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-black);
+}
+
+.ws-chat-bot footer {
+  font-family: var(--font-inter);
+}
+
+.ws-chat-suggest span {
+  border-color: transparent;
+  background: var(--color-mercury);
+}
+
+/* ---------- Modal ---------- */
+.ws-modal-backdrop {
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(6px);
+}
+
+.ws-modal {
+  border-radius: 18px;
+}
+
+.ws-modal-foot {
+  background: #fff;
+  border-color: #f0f0f2;
+}
+
+/* ---------- Pantallas heredadas (login y administración) ---------- */
+.state-chip-neutral,
+.state-chip-info,
+.state-chip-ok,
+.state-chip-warn {
+  background: transparent;
+}
+
+.dot-violet,
+.brand-dot {
+  background: var(--color-ink-black);
+}
+
+.brand-dot-pill {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.btn-pill-dark {
+  background: var(--ws-accent);
+  border-color: var(--ws-accent);
+}
+
+.btn-pill-dark:hover {
+  background: var(--ws-accent-hover);
+}
+
+.banner-alert-ok,
+.banner-alert-info {
+  background: var(--color-mist);
+  border-color: transparent;
+  color: var(--color-carbon);
+}
+
+.ws-dot-count {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.ws-comp-name small,
+.ws-kpi-value small,
+.ws-mini-kpi small,
+.ws-parcial small,
+.ws-meter-value small {
+  font-family: var(--font-inter);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Semáforo suave: verde, ámbar y rojo en tonos apagados (fondos casi pastel,
+   textos atenuados). Informan sin saltar a la vista.
+   ========================================================================== */
+:root {
+  --soft-green-text: #2f7a55;
+  --soft-green-dot: #6cc49a;
+  --soft-green-fill: #9ad8b7;
+  --soft-green-bg: #eef8f2;
+  --soft-amber-text: #8f6312;
+  --soft-amber-dot: #efb75a;
+  --soft-amber-fill: #f3cf8c;
+  --soft-amber-bg: #fdf6e8;
+  --soft-red-text: #b03a48;
+  --soft-red-dot: #e98a93;
+  --soft-red-fill: #f0a7ad;
+  --soft-red-bg: #fcf0f1;
+
+  --ws-red: var(--soft-red-text);
+  --ws-red-dot: var(--soft-red-dot);
+  --ws-amber-dot: var(--soft-amber-dot);
+  --ws-green-dot: var(--soft-green-dot);
+}
+
+/* Estados: cápsula con fondo tenue + punto + texto atenuado */
+.ws-pill,
+.state-chip {
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+}
+
+.ws-pill-ok,
+.state-chip-ok { background: var(--soft-green-bg); color: var(--soft-green-text); }
+.ws-pill-warn,
+.state-chip-warn { background: var(--soft-amber-bg); color: var(--soft-amber-text); }
+.ws-pill-danger,
+.state-chip-danger { background: var(--soft-red-bg); color: var(--soft-red-text); }
+.ws-pill-info,
+.state-chip-info { background: #eef4fc; color: #2d5f9a; }
+.ws-pill-neutral,
+.ws-pill-brand,
+.state-chip-neutral { background: var(--color-mercury); color: var(--color-carbon); }
+
+.ws-pill-ok::before,
+.state-chip-ok::before { background: var(--soft-green-dot); }
+.ws-pill-warn::before,
+.state-chip-warn::before { background: var(--soft-amber-dot); }
+.ws-pill-danger::before,
+.state-chip-danger::before { background: var(--soft-red-dot); }
+.ws-pill-info::before,
+.state-chip-info::before { background: #7fa9de; }
+
+/* Barras, medidores y gráficos */
+.ws-fill-ok { background: var(--soft-green-fill); }
+.ws-fill-warn { background: var(--soft-amber-fill); }
+.ws-fill-danger { background: var(--soft-red-fill); }
+.ws-column-fill.ws-fill-warn { background: var(--soft-amber-fill); }
+
+.ws-tone-ok { color: var(--soft-green-text); }
+.ws-tone-warn { color: var(--soft-amber-text); }
+.ws-tone-danger { color: var(--soft-red-text); }
+
+.ws-column-track::after {
+  border-top-color: var(--soft-red-dot);
+  opacity: 1;
+}
+
+
+/* Indicadores: un punto de color junto a la etiqueta */
+.ws-kpi-ok .ws-eyebrow::before,
+.ws-kpi-warn .ws-eyebrow::before,
+.ws-kpi-danger .ws-eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.ws-kpi-ok .ws-eyebrow::before { background: var(--soft-green-dot); }
+.ws-kpi-warn .ws-eyebrow::before { background: var(--soft-amber-dot); }
+.ws-kpi-danger .ws-eyebrow::before { background: var(--soft-red-dot); }
+.ws-kpi-danger .ws-kpi-value { color: var(--soft-red-text); }
+
+/* Evidencia de la alerta con fondo tenue según severidad */
+.ws-evidence-danger { background: var(--soft-red-bg); }
+.ws-evidence-warn { background: var(--soft-amber-bg); }
+
+.ws-dot-count { color: var(--soft-red-text); }
+
+/* ==========================================================================
+   Paneles con icono y botón "+" para desplegar el detalle
+   ========================================================================== */
+.ws-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ws-panel-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--color-mercury);
+  color: var(--color-ink-black);
+  flex-shrink: 0;
+}
+
+.ws-panel-icon-sm {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.ws-panel-actions {
+  align-items: center;
+}
+
+.ws-card-head {
+  align-items: center;
+}
+
+.ws-expand {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--color-mercury);
+  color: var(--color-ink-black);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.3s var(--ws-ease);
+}
+
+.ws-expand:hover {
+  background: #e6e6eb;
+}
+
+.ws-expand:focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
+
+/* "+" gira a "×" al abrir */
+.ws-expand svg {
+  transition: transform 0.3s var(--ws-ease);
+}
+
+.ws-expand.is-open svg {
+  transform: rotate(45deg);
+}
+
+.ws-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 16px;
+  border: 0;
+  border-top: 1px solid #f2f2f4;
+  background: transparent;
+  color: var(--ws-link);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ws-more:hover {
+  background: #fafafa;
+}
+
+.ws-reveal {
+  animation: ws-desplegar 0.35s var(--ws-ease);
+}
+
+@keyframes ws-desplegar {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-reveal,
+  .ws-expand,
+  .ws-expand svg {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Foto de perfil sincronizada desde Moodle */
+.ws-avatar-foto {
+  overflow: hidden;
+  background: #e8e8ed;
+}
+
+.ws-avatar-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: ws-fundido 0.25s ease;
+}
+
+/* ==========================================================================
+   Indicadores con icono (reemplazan a los puntos de color)
+   ========================================================================== */
+.ws-kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ws-kpi .ws-kpi-label .ws-eyebrow::before {
+  content: none;
+}
+
+.ws-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  background: var(--color-mercury);
+  color: var(--color-slate);
+}
+
+.ws-kpi-ok .ws-kpi-icon { background: var(--soft-green-bg); color: var(--soft-green-text); }
+.ws-kpi-warn .ws-kpi-icon { background: var(--soft-amber-bg); color: var(--soft-amber-text); }
+.ws-kpi-danger .ws-kpi-icon { background: var(--soft-red-bg); color: var(--soft-red-text); }
+
+.ws-kpi .ws-kpi-value {
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   Estilo sobrio de etiquetas y controles (en lugar de cápsulas redondas)
+   - Etiquetas de estado: rectángulo de 4px, borde fino del color del estado,
+     fondo casi imperceptible y sin punto (estilo Stripe / GitHub).
+   - Conteos (ws-states): leyenda con cuadradito de color, sin cápsula.
+   - Controles: esquinas de 8px en lugar de pill completo.
+   ========================================================================== */
+.ws-pill,
+.state-chip {
+  border-radius: 4px;
+  padding: 1px 7px;
+  gap: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0;
+  border: 1px solid var(--color-bone);
+  background: #fafafa;
+  color: var(--color-carbon);
+}
+
+.ws-pill::before,
+.state-chip::before {
+  content: none;
+}
+
+.ws-pill-ok,
+.state-chip-ok { color: var(--soft-green-text); background: #f7fbf9; border-color: #cfe8da; }
+.ws-pill-warn,
+.state-chip-warn { color: var(--soft-amber-text); background: #fffcf5; border-color: #efdcb0; }
+.ws-pill-danger,
+.state-chip-danger { color: var(--soft-red-text); background: #fdf8f9; border-color: #f0cfd4; }
+.ws-pill-info,
+.state-chip-info { color: #2d5f9a; background: #f7f9fd; border-color: #cfdcf0; }
+.ws-pill-neutral,
+.ws-pill-brand,
+.state-chip-neutral { color: var(--color-carbon); background: #fafafa; border-color: var(--color-bone); }
+
+/* Etiquetas de cabecera (tendencia, vista previa): mismo rectángulo sobrio. */
+.ws-page-actions .ws-pill,
+.ws-course-top .ws-pill {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* Conteos como leyenda: cuadradito de color + texto, sin cápsula. */
+.ws-states {
+  gap: 6px 16px;
+}
+
+.ws-states .ws-pill,
+.ws-states .state-chip {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  gap: 7px;
+  color: var(--color-carbon);
+  font-size: 12.5px;
+}
+
+.ws-states .ws-pill::before,
+.ws-states .state-chip::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--color-fog);
+}
+
+.ws-states .ws-pill-ok::before,
+.ws-states .state-chip-ok::before { background: var(--soft-green-dot); }
+.ws-states .ws-pill-warn::before,
+.ws-states .state-chip-warn::before { background: var(--soft-amber-dot); }
+.ws-states .ws-pill-danger::before,
+.ws-states .state-chip-danger::before { background: var(--soft-red-dot); }
+.ws-states .ws-pill-info::before,
+.ws-states .state-chip-info::before { background: #7fa9de; }
+
+/* Controles con esquinas de 8px */
+.ws-btn,
+.btn-pill,
+.ws-search,
+.ws-switcher-filters select,
+.ws-chat-input {
+  border-radius: 8px;
+}
+
+.ws-chip {
+  border-radius: 6px;
+}
+
+.ws-nav-tag,
+.ws-tag-comp {
+  border-radius: 4px;
+}
+
+.ws-chat-suggest span {
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+   Gráfico de evolución con ejes (ficha del estudiante)
+   ========================================================================== */
+.ws-card-full {
+  grid-column: 1 / -1;
+}
+
+.ws-chart {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ws-chart svg {
+  display: block;
+  font-family: var(--font-inter);
+}
+
+.ws-chart-grid { stroke: #f0f0f2; stroke-width: 1; }
+.ws-chart-axis { stroke: var(--color-cloud); stroke-width: 1; }
+
+.ws-chart-tick {
+  font-size: 11px;
+  fill: var(--color-ash);
+}
+
+.ws-chart-title {
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--color-slate);
+}
+
+.ws-chart-umbral {
+  stroke: var(--soft-red-dot);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.ws-chart-umbral-text {
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--soft-red-text);
+}
+
+.ws-chart-line {
+  fill: none;
+  stroke: var(--color-ink-black);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ws-chart-punto {
+  fill: var(--color-ink-black);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.ws-chart-punto.is-bajo { fill: var(--soft-red-dot); }
+
+.ws-chart-hueco {
+  fill: #fff;
+  stroke-width: 1.8;
+  stroke: var(--color-fog);
+}
+
+.ws-chart-hueco.ws-chart-warn { stroke: var(--soft-amber-dot); }
+.ws-chart-hueco.ws-chart-info { stroke: #7fa9de; }
+
+.ws-chart-punto,
+.ws-chart-hueco {
+  cursor: help;
+  transition: r 0.15s;
+}
+
+.ws-chart-punto:hover,
+.ws-chart-hueco:hover {
+  r: 6;
+}
+
+/* Leyenda: claves del gráfico + estados de las actividades */
+.ws-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-top: 10px;
+  border-top: 1px solid #f2f2f4;
+}
+
+.ws-chart-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 12.5px;
+  color: var(--color-carbon);
+}
+
+.ws-chart-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ws-key {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ws-key-punto,
+.ws-key-bajo,
+.ws-key-hueco {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.ws-key-punto { background: var(--color-ink-black); }
+.ws-key-bajo { background: var(--soft-red-dot); }
+.ws-key-hueco { border: 1.8px solid var(--color-fog); background: #fff; }
+
+.ws-key-umbral {
+  width: 16px;
+  border-top: 1.5px dashed var(--soft-red-dot);
+}
+
+/* Componentes UTA a ancho completo: al desplegar, los dos parciales van lado a lado. */
+.ws-card-full .ws-comp-block.ws-reveal {
+  display: inline-flex;
+  width: calc(50% - 12px);
+  vertical-align: top;
+  margin-top: 0;
+}
+
+.ws-card-full .ws-comp-block.ws-reveal + .ws-comp-block.ws-reveal {
+  margin-left: 24px;
+}
+
+/* ==========================================================================
+   Encabezado de página: franja de datos (ficha técnica) y aviso desplegable
+   ========================================================================== */
+.ws-page-header {
+  align-items: flex-end;
+}
+
+.ws-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  margin: 10px 0 0;
+}
+
+.ws-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 18px;
+  border-left: 1px solid var(--color-bone);
+}
+
+.ws-facts > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.ws-facts dt {
+  font-size: 11.5px;
+  color: var(--color-ash);
+}
+
+.ws-facts dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink-black);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.ws-aviso {
+  position: relative;
+  display: inline-flex;
+}
+
+.ws-aviso-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid #efdcb0;
+  background: #fffcf5;
+  color: var(--soft-amber-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ws-aviso-btn:hover {
+  background: #fdf6e8;
+}
+
+.ws-aviso-btn:focus-visible {
+  outline: 2px solid var(--ws-accent);
+  outline-offset: 2px;
+}
+
+.ws-aviso-btn svg:last-child {
+  transition: transform 0.2s var(--ws-ease);
+}
+
+.ws-aviso-btn svg.is-open {
+  transform: rotate(180deg);
+}
+
+.ws-aviso-pop {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--ws-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-carbon);
+  animation: ws-desplegar 0.25s var(--ws-ease);
+}
+
+.ws-aviso-pop strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-black);
+}

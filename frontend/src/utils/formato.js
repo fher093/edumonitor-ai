@@ -42,16 +42,29 @@ export function porcentaje(valor, decimales = 1) {
   return `${Number(valor).toFixed(decimales)} %`
 }
 
+/**
+ * La API guarda las fechas en UTC, pero SQL Server las devuelve sin zona horaria
+ * ("2026-11-10T00:28:47"). Se interpretan como UTC para mostrarlas en hora local.
+ */
+export function aFecha(valor) {
+  if (!valor) return null
+  if (valor instanceof Date) return valor
+  const texto = String(valor)
+  const sinZona = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(texto)
+  const d = new Date(sinZona ? `${texto}Z` : texto)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 export function fecha(valor) {
   if (!valor) return 'Sin fecha'
-  const d = new Date(valor)
+  const d = aFecha(valor) ?? new Date(NaN)
   if (Number.isNaN(d.getTime())) return 'Sin fecha'
   return d.toLocaleDateString('es-EC', { year: 'numeric', month: 'short', day: '2-digit' })
 }
 
 export function fechaHora(valor) {
   if (!valor) return '—'
-  const d = new Date(valor)
+  const d = aFecha(valor) ?? new Date(NaN)
   if (Number.isNaN(d.getTime())) return '—'
   return d.toLocaleString('es-EC', {
     year: 'numeric',
@@ -62,11 +75,20 @@ export function fechaHora(valor) {
   })
 }
 
-/** Valor para <input type="datetime-local"> a partir de un ISO de la API. */
-export function paraInputFecha(valor) {
-  if (!valor) return ''
-  const d = new Date(valor)
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = n => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+/** Siglas UTA de los componentes de evaluación (la etiqueta completa va en el title). */
+export const SIGLA_COMPONENTE = {
+  contacto_docente: 'CD',
+  practico_experimental: 'PE',
+  autonomo: 'AA',
+}
+
+export function siglaComponente(componente) {
+  return SIGLA_COMPONENTE[componente] ?? componente
+}
+
+/** Etiqueta corta del tipo de alerta, para listas densas. */
+export const TIPO_ALERTA_CORTO = {
+  descenso: 'Descenso',
+  atraso: 'Atraso',
+  baja_finalizacion: 'Finalización',
 }
