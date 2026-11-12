@@ -4,7 +4,7 @@
 
 **FACULTAD DE INGENIERÍA EN SISTEMAS ELECTRÓNICA E INDUSTRIAL — CARRERA DE SOFTWARE**
 
-**Proyecto:** EduMonitor AI — Sistema inteligente de seguimiento y análisis del rendimiento académico con módulo académico propio.
+**Proyecto:** EduMonitor AI — Sistema inteligente de seguimiento y análisis del rendimiento académico integrado con Moodle.
 
 **Asignatura:** Metodologías Ágiles · **Docente:** Ing. Hernán Naranjo, Mgs.
 
@@ -16,9 +16,9 @@
 
 ## 1. Objetivo del sprint
 
-Construir el núcleo académico y analítico del MVP: registrar actividades y calificaciones con las reglas UTA, restringir el acceso a los cursos propios del docente, calcular indicadores deterministas del curso y del estudiante, generar alertas configurables con evidencia y producir un análisis grupal que permita detectar dificultades antes del cierre del período.
+Construir el núcleo académico y analítico del MVP: consultar las actividades y calificaciones sincronizadas desde Moodle con las reglas UTA, restringir el acceso a los cursos propios del docente, calcular indicadores deterministas del curso y del estudiante, generar alertas configurables con evidencia y producir un análisis grupal que permita detectar dificultades antes del cierre del período.
 
-**Resultado esperado (incremento):** un docente autenticado puede seleccionar un período y un curso, crear actividades, calificar a sus estudiantes, revisar el dashboard, abrir la ficha individual, consultar alertas justificadas y analizar el rendimiento del grupo; el administrador técnico puede auditar y configurar los umbrales de las alertas.
+**Resultado esperado (incremento):** un docente autenticado puede seleccionar un período y un curso, consultar las actividades y calificaciones sincronizadas desde Moodle, revisar el dashboard, abrir la ficha individual, consultar alertas justificadas y analizar el rendimiento del grupo. Los datos llegan solos desde Moodle mediante una sincronización automática. El administrador técnico gestiona las cuentas de los docentes, supervisa la sincronización y configura los umbrales de las alertas.
 
 ---
 
@@ -28,7 +28,7 @@ Construir el núcleo académico y analítico del MVP: registrar actividades y ca
 
 | ID | Historia | Requisito | PH |
 | --- | --- | --- | --- |
-| HU-05 | Crear actividades (fecha de entrega y puntaje máximo) y registrar calificaciones y estados por estudiante. | RF-03, RNF-03 | 8 |
+| HU-05 | Consultar las actividades (componente, parcial, fecha de entrega y puntaje máximo) y las calificaciones y estados por estudiante sincronizados desde Moodle, con enlace a Moodle para calificar. | RF-03, RNF-03 | 8 |
 | HU-06 | Ver únicamente los cursos y estudiantes autorizados del docente autenticado. | RF-01, RNF-01 | 5 |
 | HU-07 | Panel con promedio (escala explícita), distribución, actividades evaluadas y progreso. | RF-05 | 5 |
 | HU-08 | Ficha individual con evolución de notas y estados de actividad. | RF-06 | 5 |
@@ -38,14 +38,27 @@ Construir el núcleo académico y analítico del MVP: registrar actividades y ca
 
 **Total: 39 PH.**
 
+> **Refinamiento (10 de noviembre de 2026) — HU-05 reformulada.** La versión inicial decía “Crear actividades y registrar calificaciones” en EduMonitor. Con la sincronización de Moodle eso duplicaba el trabajo del docente, que ya crea y califica en Moodle, y generaba dos fuentes de verdad, porque los estudiantes solo ven Moodle. Ahora la historia es de **consulta**: EduMonitor muestra las actividades y notas sincronizadas, calcula el estado efectivo (RN-02) y ofrece enlaces “Abrir en Moodle” / “Calificar en Moodle”. Se eliminaron `POST/PUT/DELETE` de actividades y `POST` de calificaciones. Tampoco se registran estudiantes ni matrículas: vienen de Moodle. Se mantienen los 8 PH: el esfuerzo pasó a la sincronización y a los enlaces. Pendiente de validación del Product Owner.
+
 ### 2.2 Tareas técnicas del sprint
 
 | ID | Tarea | Entregable |
 | --- | --- | --- |
 | TT-08 | Pruebas unitarias de indicadores y reglas de alerta (TDD). | `backend.Tests/AnaliticaServiceTests.cs` y `Sprint2EndpointsTests.cs` |
-| TT-02.3 | Prototipo de baja fidelidad del chat e informe. | Documentado en `DESIGN.md` y en el módulo de vista previa del frontend |
-| TT-03.5 | Scripts SQL de actividades, calificaciones y reglas. | `docs/sql/04-actividades-calificaciones.sql`, `docs/sql/05-reglas-alerta.sql` |
-| TT-04.4 | Actualización de contratos OpenAPI. | `docs/openapi.yaml` |
+| TT-02.3 | Prototipo de baja fidelidad del chat e informe. | `docs/PROTOTIPO_CHAT_INFORME.md` (wireframes y comportamiento) y vista previa en `/agente` e `/informe` del frontend |
+| TT-03.5 | Scripts SQL de actividades, calificaciones, reglas e integración con Moodle. | `docs/sql/04-actividades-calificaciones.sql`, `docs/sql/05-reglas-alerta.sql`, `docs/sql/06-integracion-moodle.sql` |
+| TT-04.4 | Actualización de contratos OpenAPI. | `docs/openapi.yaml` (incluye sincronización y cuentas de docentes) |
+
+### 2.3 Trabajo agregado por los refinamientos del 10-nov-2026
+
+Al pasar a Moodle como fuente de verdad, se sumó al sprint, sin cambiar los puntos de historia:
+
+| Trabajo | Motivo | Entregable |
+| --- | --- | --- |
+| Integración con Moodle: conexión (RF-02) y sincronización (RF-03) | Los datos académicos vienen de Moodle | `MoodleService/`, `backend/Services/SincronizacionMoodleService.cs`, `MoodleImportador.cs`, `frontend/src/pages/AdminMoodle.jsx` |
+| Sincronización automática cada 15 min | Que el docente no dependa de que el administrador pulse un botón | `backend/Services/SincronizacionAutomaticaWorker.cs` |
+| Enlaces “Abrir / Calificar en Moodle” | HU-05 reformulada a consulta | `backend/Services/EnlacesMoodle.cs` |
+| Gestión de cuentas de docentes (HU-02 reformulada) | El administrador ya no crea cursos; crea las cuentas que la sincronización empareja por correo | `backend/Controllers/UsuariosController.cs`, `frontend/src/pages/AdminDocentes.jsx` |
 
 ---
 
@@ -89,7 +102,7 @@ Ninguna alerta usa el modelo de lenguaje. Todas incluyen `regla`, `severidad`, `
 
 - Todo endpoint académico resuelve el curso y verifica la propiedad antes de devolver datos.
 - Docente: solo cursos con `DocenteId` igual a su usuario autenticado.
-- Administrador técnico: acceso a todos los cursos.
+- Administrador técnico: sin acceso a notas, estudiantes, indicadores, alertas ni análisis de los cursos (`403`). Solo ve los datos generales de los cursos para verificar la sincronización (mínimo privilegio; refinamiento del 10-nov-2026).
 - Curso inexistente: `404`. Curso de otro docente: `403`. Sin token: `401`.
 - La configuración de reglas de alerta es exclusiva del Administrador Técnico (`PUT /api/alertas/reglas/{id}`).
 
@@ -106,28 +119,36 @@ Ninguna alerta usa el modelo de lenguaje. Todas incluyen `regla`, `severidad`, `
 | `backend/Services/AnaliticaService.cs` | Cálculos deterministas: evaluaciones, dashboard, ficha, alertas y análisis. |
 | `backend/Services/AnaliticaProvider.cs` | Carga coherente del contexto analítico del curso. |
 | `backend/Controllers/ControladorAcademicoBase.cs` | Autorización reutilizable por curso. |
-| `backend/Controllers/ActividadesController.cs` | CRUD de actividades y finalización. |
-| `backend/Controllers/CalificacionesController.cs` | Consulta y registro masivo de notas/estados. |
+| `backend/Controllers/ActividadesController.cs` | Consulta de actividades (con enlace a Moodle) y finalización. |
+| `backend/Controllers/CalificacionesController.cs` | Consulta de notas y estado efectivo por estudiante. |
 | `backend/Controllers/IndicadoresController.cs` | Dashboard y ficha individual. |
 | `backend/Controllers/AlertasController.cs` | Alertas y reglas configurables. |
 | `backend/Controllers/AnalisisController.cs` | Análisis grupal. |
-| `backend/Controllers/CursosController.cs` | Filtros por período, búsqueda y matrículas. |
-| `backend/Data/DbInitializer.cs` | DDL, reglas por defecto y datos de demostración. |
+| `backend/Controllers/CursosController.cs` | Consulta de cursos con filtros por período y búsqueda, y nómina. |
+| `backend/Controllers/SincronizacionController.cs` | Sincronización manual, historial y estado (fuente y fecha, RNF-08). |
+| `backend/Services/SincronizacionAutomaticaWorker.cs` | Sincronización automática periódica. |
+| `backend/Controllers/UsuariosController.cs` | Cuentas de docentes (solo administrador). |
+| `backend/Data/DbInitializer.cs` | DDL, usuarios iniciales y reglas por defecto. Los datos locales de demostración solo se cargan en las pruebas. |
+| `MoodleService/` | Microservicio que conoce Moodle: conexión cifrada y extracción vía servicios web REST. |
 
 ### 4.2 Frontend (React + Vite)
 
 | Archivo | Responsabilidad |
 | --- | --- |
-| `frontend/src/hooks/useCursos.js` | Cursos autorizados, filtros de período/búsqueda y curso activo. |
-| `frontend/src/components/SelectorCurso.jsx` | Barra contextual compartida. |
-| `frontend/src/pages/Actividades.jsx` | CRUD de actividades y registro de calificaciones. |
-| `frontend/src/pages/Dashboard.jsx` | Indicadores, distribución, parciales y seguimiento. |
-| `frontend/src/pages/FichaEstudiante.jsx` | Evolución, componentes, actividades y alertas del estudiante. |
-| `frontend/src/pages/Alertas.jsx` | Alertas con evidencia y reglas aplicadas. |
-| `frontend/src/pages/Analisis.jsx` | Hallazgos, tendencias y detalle por actividad. |
+| `frontend/src/cursos/CursoContext.jsx` | Curso activo compartido por todo el espacio del docente (con `useCursos.js`: período y búsqueda) y contador de alertas. |
+| `frontend/src/components/CursoSwitcher.jsx` | Selector de asignatura y período en el menú lateral (HU-09). |
+| `frontend/src/components/ui.jsx` | Componentes del espacio de trabajo: paneles, KPI, medidor de nota, avatar, chips, sparkline y modal. |
+| `frontend/src/pages/Resumen.jsx` | Resumen del curso en una pantalla: indicadores, distribución, parciales, a quién atender y qué reforzar (HU-07). |
+| `frontend/src/pages/Estudiantes.jsx` | Lista con búsqueda y filtros + ficha individual en pestañas (HU-06, HU-08, HU-09). |
+| `frontend/src/pages/Actividades.jsx` | Lista por parcial + notas de la actividad, con “Calificar en Moodle” (HU-05). |
+| `frontend/src/pages/Alertas.jsx` | Lista filtrable + evidencia y regla aplicada; reglas en modal (HU-10). |
+| `frontend/src/pages/Analisis.jsx` | Logro por actividad frente al 60 %, hallazgos y componentes; detalle en modal (HU-11). |
 | `frontend/src/pages/AdminReglas.jsx` | Configuración de umbrales (solo administrador). |
+| `frontend/src/pages/AdminMoodle.jsx` | Conexión, sincronización e historial (solo administrador). |
+| `frontend/src/pages/AdminDocentes.jsx` | Cuentas de docentes (solo administrador). |
 | `frontend/src/utils/formato.js` | Formatos y etiquetas compartidas. |
-| `frontend/src/sprint2.css` | Estilos del incremento sobre los tokens de `DESIGN.md`. |
+| `frontend/src/workspace.css` | Estructura del espacio de trabajo: pantallas de alto fijo con paneles lista ↔ detalle. |
+| `frontend/src/theme.css` | Tema minimalista (tipografía Geist, grises, un acento azul y rojo solo para atención). Ver `DESIGN.md`. |
 
 ---
 
@@ -135,23 +156,23 @@ Ninguna alerta usa el modelo de lenguaje. Todas incluyen `regla`, `severidad`, `
 
 | Método | Ruta | Rol | Descripción |
 | --- | --- | --- | --- |
-| GET | `/api/cursos?periodo=&q=` | Docente / Admin | Cursos filtrados por período y texto. |
+| GET | `/api/cursos?periodo=&q=` | Docente / Admin | Cursos filtrados por período y texto (el admin ve todos, sin notas). |
 | GET | `/api/cursos/periodos` | Docente / Admin | Períodos disponibles del usuario. |
-| GET | `/api/cursos/{cursoId}/matriculas?q=&estado=` | Docente / Admin | Nómina filtrable. |
-| GET | `/api/cursos/{cursoId}/actividades` | Docente / Admin | Actividades del curso. |
-| POST | `/api/cursos/{cursoId}/actividades` | Docente / Admin | Crear actividad. |
-| GET | `/api/actividades/{id}` | Docente / Admin | Detalle de actividad. |
-| PUT | `/api/actividades/{id}` | Docente / Admin | Editar actividad. |
-| DELETE | `/api/actividades/{id}` | Docente / Admin | Eliminar actividad y sus notas. |
-| GET | `/api/actividades/{id}/calificaciones` | Docente / Admin | Nómina con estado efectivo. |
-| POST | `/api/actividades/{id}/calificaciones` | Docente / Admin | Upsert masivo de notas/estados. |
-| GET | `/api/cursos/{cursoId}/finalizacion` | Docente / Admin | Finalización por estudiante. |
-| GET | `/api/indicadores/curso/{cursoId}` | Docente / Admin | Dashboard del curso. |
-| GET | `/api/indicadores/curso/{cursoId}/estudiantes/{estudianteId}` | Docente / Admin | Ficha individual. |
-| GET | `/api/alertas/curso/{cursoId}` | Docente / Admin | Alertas con evidencia. |
+| GET | `/api/cursos/{cursoId}/matriculas?q=&estado=` | Docente propietario | Nómina filtrable. |
+| GET | `/api/cursos/{cursoId}/actividades` | Docente propietario | Actividades del curso. |
+| GET | `/api/actividades/{id}` | Docente propietario | Detalle de actividad. |
+| GET | `/api/actividades/{id}/calificaciones` | Docente propietario | Nómina con estado efectivo. |
+| GET | `/api/cursos/{cursoId}/finalizacion` | Docente propietario | Finalización por estudiante. |
+| GET | `/api/indicadores/curso/{cursoId}` | Docente propietario | Dashboard del curso. |
+| GET | `/api/indicadores/curso/{cursoId}/estudiantes/{estudianteId}` | Docente propietario | Ficha individual. |
+| GET | `/api/alertas/curso/{cursoId}` | Docente propietario | Alertas con evidencia. |
 | GET | `/api/alertas/reglas` | Docente / Admin | Reglas configuradas. |
 | PUT | `/api/alertas/reglas/{id}` | Admin | Actualizar parámetros/estado. |
-| GET | `/api/analisis/curso/{cursoId}` | Docente / Admin | Análisis grupal. |
+| GET | `/api/analisis/curso/{cursoId}` | Docente propietario | Análisis grupal. |
+| POST | `/api/sincronizacion/moodle` | Admin | Sincronizar ahora (también corre sola cada 15 min). |
+| GET | `/api/sincronizacion/moodle/historial` | Admin | Historial con fecha, contadores y errores. |
+| GET | `/api/sincronizacion/moodle/estado` | Docente / Admin | Fuente y fecha de los datos (RNF-08). |
+| GET/POST/PUT | `/api/usuarios/docentes…` | Admin | Cuentas de docentes (HU-02 reformulada). |
 
 El contrato completo, con esquemas y ejemplos, está en `docs/openapi.yaml`.
 
@@ -183,10 +204,10 @@ El contrato completo, con esquemas y ejemplos, está en `docs/openapi.yaml`.
 
 **Integración (`Sprint2EndpointsTests`):**
 
-- CRUD completo de actividades y validación de componente.
-- Validación de nota, estado, matrícula y duplicados al calificar.
-- Normalización de nota 0 a `nota_cero`.
-- Acceso 403 a cursos de otro docente y 200 para el administrador.
+- Consulta de actividades, detalle y calificaciones con estado efectivo.
+- Actividades, notas, cursos y matrículas no se modifican desde la API (`405`).
+- Enlaces a Moodle del curso y de cada actividad tras la sincronización.
+- Acceso `403` a los datos académicos de cursos de otro docente y también para el administrador técnico.
 - Dashboard y ficha con datos reales.
 - Alertas con evidencia y reglas configurables.
 - Solo el administrador puede editar reglas; validación de JSON y parámetros.
@@ -194,11 +215,15 @@ El contrato completo, con esquemas y ejemplos, está en `docs/openapi.yaml`.
 - Finalización por estudiante.
 - `401` sin token.
 
-**Resultado:** 54 pruebas aprobadas (`dotnet test EduMonitor.slnx`), 0 errores.
+**Integración con Moodle (`MoodleSincronizacionTests`, `MoodleService.Tests`):** importación idempotente, bajas de Moodle reflejadas como matrículas retiradas, curso omitido si su docente no tiene cuenta, historial con errores, sincronización automática con token técnico y mapeo de ítems de Moodle al modelo UTA.
+
+**Cuentas de docentes (`UsuariosEndpointsTests`):** crear, correo duplicado (`409`), clave débil (`400`), desactivar, desbloquear, restablecer clave y acceso denegado al docente (`403`).
+
+**Resultado:** 86 pruebas aprobadas (`dotnet test EduMonitor.slnx`: 65 del backend y 21 de MoodleService), 0 errores. Incluye `UsuariosEndpointsTests` (gestión de cuentas de docentes, HU-02).
 
 ### 6.3 Datos de prueba
 
-`DbInitializer` siembra un curso con 7 actividades (tres componentes en ambos parciales) y patrones que garantizan:
+El Moodle local de Docker (`moodle/seed.php`) crea 3 cursos del período 2026-B con 8 actividades (tres componentes UTA en ambos parciales y una futura) y patrones de notas que garantizan los casos de abajo. El curso *Sistemas Operativos* tiene un profesor sin cuenta en EduMonitor, para demostrar el registro de errores. Las pruebas automáticas usan los mismos patrones sembrados localmente por `DbInitializer` (`Seed:DatosDemoLocales`):
 
 - estudiante de alto rendimiento;
 - estudiante con descenso sostenido;
@@ -206,7 +231,7 @@ El contrato completo, con esquemas y ejemplos, está en `docs/openapi.yaml`.
 - estudiante con nota cero y estados pendientes;
 - estudiante con rendimiento bajo general.
 
-Los scripts `docs/sql/04` y `docs/sql/05` reproducen el esquema y los datos en SQL Server 2022 de forma idempotente.
+Los scripts `docs/sql/04` a `docs/sql/06` reproducen el esquema en SQL Server 2022 de forma idempotente.
 
 ---
 
@@ -217,7 +242,7 @@ Los scripts `docs/sql/04` y `docs/sql/05` reproducen el esquema y los datos en S
 | 30 oct | Sprint Planning, modelo de actividades/calificaciones y contratos. | Todo el equipo |
 | 30–31 oct | Entidades, DbContext, DDL y datos semilla. | Monserrath Medina / Fernando Llerena |
 | 2–3 nov | `AnaliticaService` y pruebas TDD de indicadores y alertas. | Joel Poaquiza |
-| 4–5 nov | Endpoints de actividades, calificaciones y permisos por curso. | Fernando Llerena |
+| 4–5 nov | Endpoints de consulta de actividades, calificaciones y permisos por curso. | Fernando Llerena |
 | 5–6 nov | Dashboard, ficha individual y análisis grupal (API). | Joel Poaquiza |
 | 6–7 nov | Pantallas de actividades, dashboard, ficha y alertas. | Daky Fueres |
 | 9–10 nov | Filtros de período/búsqueda, configuración de reglas y estilo. | Daky Fueres |
@@ -237,11 +262,11 @@ Los scripts `docs/sql/04` y `docs/sql/05` reproducen el esquema y los datos en S
 
 | Historia | Criterio de aceptación |
 | --- | --- |
-| HU-05 | El docente crea, edita y elimina actividades de sus cursos; registra notas por estudiante; el sistema rechaza notas fuera de rango, estados inválidos y estudiantes no matriculados. |
-| HU-06 | Un docente no puede leer ni modificar actividades, calificaciones, indicadores, alertas o análisis de cursos ajenos (`403`); el administrador sí puede. |
+| HU-05 | El docente ve las actividades de sus cursos con componente, parcial, entrega, puntaje y avance de calificación, y la nota y el estado efectivo (RN-02) de cada estudiante. Los datos provienen de Moodle; EduMonitor no permite crearlos ni editarlos y ofrece enlaces para hacerlo en Moodle. |
+| HU-06 | Un docente no puede leer actividades, calificaciones, indicadores, alertas ni análisis de cursos ajenos (`403`). El administrador técnico tampoco accede a esos datos (`403`); solo ve los datos generales de los cursos. |
 | HU-07 | El dashboard muestra promedio con escala explícita, distribución por rangos, actividades evaluadas, progreso y advertencias cuando faltan datos. |
 | HU-08 | La ficha muestra promedio, parciales, nota final (solo si está completa), componentes, evolución, estados y alertas del estudiante. |
-| HU-09 | El período y la búsqueda filtran cursos y matrículas sin exponer cursos no autorizados. |
+| HU-09 | El período y la búsqueda filtran cursos sin exponer cursos no autorizados. En el dashboard se buscan estudiantes por nombre, cédula o correo y se filtran: con alertas, nota final < 14, sin entrega o nota final pendiente. |
 | HU-10 | Cada alerta incluye regla, severidad y evidencia; el administrador puede ajustar `k`, `Δ`, `n` y `p`, y desactivar reglas. |
 | HU-11 | El análisis grupal identifica actividades bajo el 60 % de logro, calcula tendencia y presenta hallazgos y advertencias. |
 | TT-08 | Las pruebas de indicadores y alertas se ejecutan en CI y pasan en verde. |
@@ -251,15 +276,16 @@ Los scripts `docs/sql/04` y `docs/sql/05` reproducen el esquema y los datos en S
 
 ## 9. Demostración del incremento
 
-1. Iniciar sesión como docente y abrir **Actividades**.
-2. Crear una actividad del parcial 2 y calificar a un estudiante con nota 0 y a otro como `sin_entrega`.
-3. Abrir **Dashboard**: verificar promedio, distribución, parciales y advertencias.
-4. Abrir la **ficha** de un estudiante con descenso y revisar su evolución y alertas.
+1. Iniciar sesión como docente y abrir **Actividades**. La barra superior muestra la fuente: *Moodle · fecha de sincronización*.
+2. Seleccionar una actividad y, en el panel derecho, revisar los estados (`calificada`, `nota_cero`, `sin_entrega`). Pulsar **Calificar en Moodle**, cambiar una nota allí y comprobar el cambio en EduMonitor tras la sincronización automática (o con *Sincronizar ahora* del administrador, si se quiere al instante).
+3. Abrir **Resumen**: verificar promedio con escala, distribución, parciales (botón +) y el aviso **Datos incompletos**.
+4. En **Estudiantes**, abrir la ficha de un estudiante con descenso: gráfico de evolución con ejes y umbral, componentes y alertas.
 5. Abrir **Alertas**: comprobar que cada tarjeta muestra la evidencia y la regla aplicada.
 6. Abrir **Análisis grupal**: revisar actividades bajo el umbral y tendencia general.
-7. Cambiar el **período** y buscar una asignatura por código.
+7. En el selector de asignatura del menú lateral, cambiar el **período** y buscar por código; en **Estudiantes**, filtrar **Con alertas**.
 8. Iniciar sesión como administrador, abrir **Reglas de alerta**, desactivar la regla de descenso y comprobar que la alerta desaparece.
-9. Verificar con `curl` o Postman que un docente recibe `403` al consultar un curso ajeno.
+9. Como administrador, en **Docentes**, crear la cuenta `luis.martinez@uta.edu.ec`. Luego, en **Moodle → Sincronizar ahora**, ver que *Sistemas Operativos* deja de omitirse.
+10. Verificar con `curl` o Postman que un docente recibe `403` al consultar un curso ajeno y que el administrador también recibe `403` en los indicadores de un curso.
 
 ---
 
@@ -298,6 +324,7 @@ Los scripts `docs/sql/04` y `docs/sql/05` reproducen el esquema y los datos en S
 - Separar la analítica en un servicio puro permitió probar los cálculos sin base de datos ni IA.
 - La autorización centralizada evitó duplicar lógica de permisos en cada controlador.
 - Los datos semilla con casos críticos facilitaron la validación visual y las pruebas.
+- Revisar el alcance a mitad del sprint (refinamientos del 10-nov) evitó construir funciones que duplicaban Moodle.
 
 **¿Qué mejorar?**
 

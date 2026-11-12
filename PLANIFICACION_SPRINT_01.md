@@ -515,7 +515,7 @@ Estimación: puntos de historia (PH) para las historias y horas para las tareas 
 | --- | --- | --- | --- | --- | --- |
 | **ID** | **Historia de usuario** | **Requisito** | **Pr.** | **PH** | **Spr.** |
 | HU-01 | Como docente o administrador técnico, quiero iniciar sesión con mi rol, para acceder solo a lo que me corresponde. | RF-01 | A   | 5   | 1   |
-| HU-02 | Como docente, quiero crear y administrar mis cursos (nombre, período y escala de calificación), para organizar mi trabajo. | RF-02 | A   | 5   | 1   |
+| HU-02 | Como administrador técnico, quiero gestionar las cuentas de los docentes, para que la sincronización con Moodle les asigne sus cursos. *(Reformulada el 10-nov-2026; versión inicial: crear y administrar cursos.)* | RF-02 | A   | 5   | 1   |
 | HU-03 | Como docente, quiero registrar estudiantes y matricularlos en mis cursos, para gestionar mi clase. | RF-03 | A   | 5   | 1   |
 | HU-04 | Como docente, quiero ver el listado de mis cursos autorizados y seleccionar uno, para elegir el curso a analizar. | RF-04 | A   | 3   | 1   |
 | HU-05 | Como docente, quiero crear actividades (fecha de entrega y puntaje máximo) y registrar calificaciones y estados por estudiante, para ver el rendimiento de mi curso. | RF-03, RNF-03 | A   | 8   | 2   |
@@ -563,6 +563,8 @@ _\* Estimación inicial: se ajustará en el Sprint Planning de cada sprint. Las 
 **Total del proyecto: 88 puntos de historia (PH) en 17 historias de usuario, más 107 h de tareas técnicas.** La planificación inicial se ajustará según la velocidad real del equipo obtenida al finalizar el Sprint 1, permitiendo recalibrar la carga de los sprints posteriores.
 
 **Refinamiento del Product Backlog (26 de octubre de 2026):** el equipo decide no conectar el sistema a ningún Moodle (ni institucional ni propio) y construir un módulo académico local que replica de forma simplificada su modelo. Cambian RF-02, RF-03, HU-02, HU-03, HU-05, TT-05 y las secciones 7.4 y 7.5; los demás requisitos no cambian. El cambio queda pendiente de validación del Product Owner (TT-05.3).
+
+**Refinamiento del Product Backlog (10 de noviembre de 2026):** se revierte la decisión anterior. Con la integración de Moodle (RF-02 conexión, RF-03 sincronización), Moodle vuelve a ser la fuente de verdad de cursos, matrículas, actividades y notas, y EduMonitor solo los consulta y analiza. Crear tareas o calificar en EduMonitor duplicaba el trabajo del docente y los estudiantes nunca verían esas tareas. Cambian: **HU-02**, ahora “Como administrador técnico, quiero gestionar las cuentas de los docentes (crear, editar, activar o desactivar, desbloquear y restablecer la clave), para que la sincronización con Moodle les asigne sus cursos por su correo”. Los cursos ya no se crean en EduMonitor, así que se retiraron el CRUD de cursos y su formulario (T-02.1 y T-02.2 quedan como trabajo histórico del Sprint 1). **HU-03**: el docente consulta la nómina sincronizada y nadie registra estudiantes ni matrículas en EduMonitor. **HU-05**: ver la planificación del Sprint 2. **HU-06**: el administrador técnico tampoco accede a notas, estudiantes ni indicadores (mínimo privilegio); solo ve los datos generales de los cursos para verificar la sincronización. El rol del administrador queda en lo técnico: cuentas de docentes, conexión y sincronización con Moodle, reglas de alerta, estado de los servicios y auditoría. Los puntos de historia no cambian. El cambio queda pendiente de validación del Product Owner.
 
 # Trazabilidad de requisitos
 
@@ -639,7 +641,7 @@ Nota: La planificación inicial se estimó en 88 puntos de historia (PH) distrib
 | --- | --- | --- | --- | --- |
 | **ID** | **Historia de usuario** | **Requisito** | **PH** | **Responsables** |
 | HU-01 | Como docente o administrador técnico, quiero iniciar sesión con mi rol, para acceder solo a lo que me corresponde. | RF-01 | 5   | Joel Poaquiza, Daky Fueres, Monserrath Medina |
-| HU-02 | Como docente, quiero crear y administrar mis cursos (nombre, período y escala de calificación), para organizar mi trabajo. | RF-02 | 5   | Fernando Llerena, Daky Fueres |
+| HU-02 | Como administrador técnico, quiero gestionar las cuentas de los docentes, para que la sincronización con Moodle les asigne sus cursos. *(Reformulada el 10-nov-2026; versión inicial: crear y administrar cursos.)* | RF-02 | 5   | Fernando Llerena, Daky Fueres |
 | HU-03 | Como docente, quiero registrar estudiantes y matricularlos en mis cursos, para gestionar mi clase. | RF-03 | 5   | Joel Poaquiza, Monserrath Medina |
 | HU-04 | Como docente, quiero ver el listado de mis cursos autorizados y seleccionar uno, para elegir el curso a analizar. | RF-04 | 3   | Monserrath Medina, Daky Fueres |
 

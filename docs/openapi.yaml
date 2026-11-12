@@ -36,6 +36,13 @@ components:
       description: Identificador de la actividad.
       schema:
         type: integer
+    DocenteIdPath:
+      name: id
+      in: path
+      required: true
+      description: Identificador de la cuenta del docente.
+      schema:
+        type: integer
 
   schemas:
     LoginRequest:
@@ -81,45 +88,174 @@ components:
         message:
           type: string
 
-    CrearCursoRequest:
+    # --- RF-03: sincronización con Moodle ---
+    SincronizarMoodleRequest:
       type: object
-      required: [nombre, codigo, periodo, docenteId]
       properties:
-        nombre:
-          type: string
-          example: Bases de Datos
-        codigo:
-          type: string
-          example: BD-301
-        periodo:
-          type: string
-          example: Periodo 2026-A
-        escalaCalificacion:
-          type: number
-          default: 20.0
-        docenteId:
-          type: integer
-          example: 2
-        paralelo:
-          type: string
-          example: 'Paralelo "A" - Tercer Semestre'
+        cursosMoodle:
+          type: array
+          nullable: true
+          description: Ids de cursos de Moodle a sincronizar; vacío o null = todos los visibles para el usuario técnico.
+          items:
+            type: integer
+            format: int64
 
-    EditarCursoRequest:
+    DetalleSincronizacionDto:
       type: object
-      required: [nombre, codigo, periodo]
+      properties:
+        tipo:
+          type: string
+          enum: [error, advertencia, info]
+        cursoMoodleId:
+          type: integer
+          format: int64
+          nullable: true
+        mensaje:
+          type: string
+
+    SincronizacionMoodleDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        fechaInicio:
+          type: string
+          format: date-time
+        fechaFin:
+          type: string
+          format: date-time
+          nullable: true
+        estado:
+          type: string
+          enum: [en_curso, exitosa, con_advertencias, fallida]
+        usuarioCorreo:
+          type: string
+          nullable: true
+          description: Administrador que la ejecutó; null si fue una sincronización automática.
+        urlMoodle:
+          type: string
+          nullable: true
+        cursosImportados:
+          type: integer
+        cursosOmitidos:
+          type: integer
+        estudiantesImportados:
+          type: integer
+        matriculasActivas:
+          type: integer
+        matriculasRetiradas:
+          type: integer
+        actividadesImportadas:
+          type: integer
+        calificacionesImportadas:
+          type: integer
+        mensaje:
+          type: string
+          nullable: true
+        detalle:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleSincronizacionDto'
+
+    EstadoSincronizacionDto:
+      type: object
+      description: Fuente y fecha de los datos que ve el docente (RNF-08).
+      properties:
+        ultimaSincronizacion:
+          type: string
+          format: date-time
+          nullable: true
+        estado:
+          type: string
+          nullable: true
+        urlMoodle:
+          type: string
+          nullable: true
+        cursosMoodle:
+          type: integer
+        sincronizacionAutomatica:
+          type: boolean
+        intervaloMinutos:
+          type: integer
+          nullable: true
+
+    # --- HU-02: cuentas de docentes (solo Administrador Técnico) ---
+    DocenteDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        correo:
+          type: string
+          description: Debe coincidir con el correo del profesor en Moodle; la sincronización asigna los cursos por este correo.
+        activo:
+          type: boolean
+        bloqueado:
+          type: boolean
+          description: Bloqueado temporalmente por intentos fallidos de inicio de sesión.
+        bloqueadoHasta:
+          type: string
+          format: date-time
+          nullable: true
+        ultimoAcceso:
+          type: string
+          format: date-time
+          nullable: true
+        cursosAsignados:
+          type: integer
+          description: Cursos de Moodle asignados en la sincronización (0 suele indicar que el correo no coincide).
+        fechaCreacion:
+          type: string
+          format: date-time
+
+    CrearDocenteRequest:
+      type: object
+      required: [nombre, correo, claveTemporal]
       properties:
         nombre:
           type: string
-        codigo:
+          minLength: 2
+          maxLength: 150
+          example: María Fernanda López
+        correo:
           type: string
-        periodo:
+          format: email
+          example: mlopez@uta.edu.ec
+        claveTemporal:
           type: string
-        escalaCalificacion:
-          type: number
-        docenteId:
-          type: integer
-        paralelo:
+          minLength: 8
+          maxLength: 128
+          description: Mínimo 8 caracteres, con letras y números.
+
+    EditarDocenteRequest:
+      type: object
+      required: [nombre, correo]
+      properties:
+        nombre:
           type: string
+          minLength: 2
+          maxLength: 150
+        correo:
+          type: string
+          format: email
+
+    CambiarEstadoDocenteRequest:
+      type: object
+      required: [activo]
+      properties:
+        activo:
+          type: boolean
+
+    RestablecerClaveRequest:
+      type: object
+      required: [claveTemporal]
+      properties:
+        claveTemporal:
+          type: string
+          minLength: 8
+          maxLength: 128
 
     CursoDto:
       type: object
@@ -145,42 +281,22 @@ components:
         fechaCreacion:
           type: string
           format: date-time
-
-    CrearEstudianteRequest:
-      type: object
-      required: [identificacion, nombre, correo]
-      properties:
-        identificacion:
+        origen:
           type: string
-          example: '1801234567'
-        nombre:
+          enum: [local, moodle]
+        fechaSincronizacion:
           type: string
-          example: Mateo Sebastián Andrade
-        correo:
-          type: string
-          format: email
-          example: m.andrade@uta.edu.ec
-
-    EstudianteDto:
-      type: object
-      properties:
-        id:
+          format: date-time
+          nullable: true
+        moodleCourseId:
           type: integer
-        identificacion:
+          format: int64
+          nullable: true
+        urlMoodle:
           type: string
-        nombre:
-          type: string
-        correo:
-          type: string
-        activo:
-          type: boolean
-
-    MatricularEstudianteRequest:
-      type: object
-      required: [estudianteId]
-      properties:
-        estudianteId:
-          type: integer
+          nullable: true
+          description: Página del curso en Moodle (null si el curso no proviene de Moodle).
+          example: http://localhost:8081/course/view.php?id=2
 
     MatriculaDto:
       type: object
@@ -204,45 +320,7 @@ components:
           type: string
           example: Activa
 
-    # --- Sprint 2: actividades y calificaciones ---
-    CrearActividadRequest:
-      type: object
-      required: [nombre, tipo, componente]
-      properties:
-        nombre:
-          type: string
-          minLength: 2
-          maxLength: 150
-          example: Taller de normalización
-        tipo:
-          type: string
-          minLength: 2
-          maxLength: 40
-          example: Taller
-        componente:
-          type: string
-          enum: [contacto_docente, practico_experimental, autonomo]
-          example: practico_experimental
-        parcial:
-          type: integer
-          enum: [1, 2]
-          default: 1
-        fechaEntrega:
-          type: string
-          format: date-time
-          nullable: true
-          example: '2026-10-20T23:59:00Z'
-        puntajeMaximo:
-          type: number
-          minimum: 0.1
-          maximum: 100
-          default: 10
-          description: Puntaje máximo de la actividad (nota normalizada sobre 10 para el cálculo UTA).
-
-    EditarActividadRequest:
-      allOf:
-        - $ref: '#/components/schemas/CrearActividadRequest'
-
+    # --- Sprint 2: actividades y calificaciones (solo lectura; se crean y califican en Moodle) ---
     ActividadDto:
       type: object
       properties:
@@ -279,34 +357,17 @@ components:
         fechaCreacion:
           type: string
           format: date-time
-
-    RegistrarCalificacionItem:
-      type: object
-      required: [estudianteId, estado]
-      properties:
-        estudianteId:
+        moodleGradeItemId:
           type: integer
-        nota:
-          type: number
+          format: int64
           nullable: true
-          description: Obligatoria para calificada; debe estar entre 0 y el puntaje máximo.
-        estado:
+          description: Ítem de calificación de Moodle del que proviene la actividad.
+        urlMoodle:
           type: string
-          enum: [calificada, nota_cero, sin_entrega, pendiente, completada]
-        observacion:
-          type: string
-          maxLength: 500
           nullable: true
+          description: Vista de calificación del ítem en Moodle (grade/report/singleview), donde el docente califica.
+          example: http://localhost:8081/grade/report/singleview/index.php?id=2&item=grade&itemid=15
 
-    RegistrarCalificacionesRequest:
-      type: object
-      required: [calificaciones]
-      properties:
-        calificaciones:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/RegistrarCalificacionItem'
 
     CalificacionActividadDto:
       type: object
@@ -997,27 +1058,6 @@ paths:
                   $ref: '#/components/schemas/CursoDto'
         '401':
           description: No autenticado
-    post:
-      summary: Crear un nuevo curso
-      tags: [Cursos]
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CrearCursoRequest'
-      responses:
-        '201':
-          description: Curso creado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CursoDto'
-        '400':
-          description: Error de validación o código duplicado en el período
-
   /api/cursos/{id}:
     get:
       summary: Obtener detalle de un curso propio
@@ -1037,49 +1077,6 @@ paths:
           description: Curso ajeno al docente
         '404':
           description: No encontrado
-    put:
-      summary: Editar un curso propio
-      tags: [Cursos]
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditarCursoRequest'
-      responses:
-        '200':
-          description: Curso actualizado
-        '400':
-          description: Error de validación
-        '403':
-          description: No autorizado para este curso
-    delete:
-      summary: Eliminar un curso propio
-      tags: [Cursos]
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Curso eliminado
-        '403':
-          description: No autorizado
-        '404':
-          description: No encontrado
-
   /api/cursos/{cursoId}/matriculas:
     get:
       summary: Listar estudiantes matriculados en un curso
@@ -1114,98 +1111,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MatriculaDto'
-    post:
-      summary: Matricular estudiante en el curso
-      tags: [Matrículas]
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: cursoId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MatricularEstudianteRequest'
-      responses:
-        '201':
-          description: Estudiante matriculado con éxito
-        '400':
-          description: Ya se encuentra matriculado
-        '403':
-          description: Curso no pertenece al docente
-
-  /api/cursos/{cursoId}/matriculas/{estudianteId}:
-    delete:
-      summary: Desmatricular estudiante de un curso
-      tags: [Matrículas]
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: cursoId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: estudianteId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Estudiante desmatriculado
-        '403':
-          description: No autorizado
-        '404':
-          description: No encontrado
-
-  /api/estudiantes:
-    get:
-      summary: Buscar estudiantes por nombre o cédula
-      tags: [Estudiantes]
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: q
-          in: query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Lista de estudiantes encontrados
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EstudianteDto'
-    post:
-      summary: Registrar nuevo estudiante
-      tags: [Estudiantes]
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CrearEstudianteRequest'
-      responses:
-        '201':
-          description: Estudiante registrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EstudianteDto'
-        '400':
-          description: Cédula/Identificación duplicada
-
   /api/cursos/periodos:
     get:
       summary: Listar períodos académicos disponibles
@@ -1247,37 +1152,6 @@ paths:
           description: Curso ajeno al docente autenticado
         '404':
           description: Curso no encontrado
-    post:
-      summary: Crear una actividad evaluable
-      description: Registra una actividad con fecha de entrega, puntaje máximo y componente UTA (HU-05).
-      tags: [Actividades]
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/CursoId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CrearActividadRequest'
-      responses:
-        '201':
-          description: Actividad creada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActividadDto'
-        '400':
-          description: Datos inválidos o componente no reconocido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Curso ajeno al docente autenticado
-        '404':
-          description: Curso no encontrado
 
   /api/actividades/{id}:
     get:
@@ -1296,52 +1170,6 @@ paths:
                 $ref: '#/components/schemas/ActividadDto'
         '403':
           description: Actividad de un curso ajeno
-        '404':
-          description: Actividad no encontrada
-    put:
-      summary: Editar una actividad
-      description: No permite reducir el puntaje máximo por debajo de una nota ya registrada.
-      tags: [Actividades]
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ActividadId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditarActividadRequest'
-      responses:
-        '200':
-          description: Actividad actualizada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActividadDto'
-        '400':
-          description: Datos inválidos o puntaje máximo incompatible con notas existentes
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: No autorizado
-        '404':
-          description: Actividad no encontrada
-    delete:
-      summary: Eliminar una actividad
-      description: Elimina la actividad y sus calificaciones asociadas.
-      tags: [Actividades]
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ActividadId'
-      responses:
-        '204':
-          description: Actividad eliminada
-        '403':
-          description: No autorizado
         '404':
           description: Actividad no encontrada
 
@@ -1367,41 +1195,6 @@ paths:
                   $ref: '#/components/schemas/CalificacionActividadDto'
         '403':
           description: Actividad de un curso ajeno
-        '404':
-          description: Actividad no encontrada
-    post:
-      summary: Registrar o actualizar calificaciones en lote
-      description: >-
-        Aplica las reglas de estados RN-02: calificada exige nota entre 0 y el puntaje
-        máximo; nota_cero fija 0; sin_entrega, pendiente y completada no llevan nota.
-      tags: [Calificaciones]
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/ActividadIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegistrarCalificacionesRequest'
-      responses:
-        '200':
-          description: Calificaciones actualizadas
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CalificacionActividadDto'
-        '400':
-          description: Estudiante no matriculado, estado inválido, nota fuera de rango o estudiante repetido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: No autorizado
         '404':
           description: Actividad no encontrada
 
@@ -1579,3 +1372,300 @@ paths:
         '404':
           description: Curso no encontrado
 
+
+  # --- HU-02: cuentas de docentes (solo Administrador Técnico) ---
+  /api/usuarios/docentes:
+    get:
+      summary: Listar cuentas de docentes
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtro por nombre o correo.
+      responses:
+        '200':
+          description: Docentes con su estado y cursos asignados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocenteDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+    post:
+      summary: Crear la cuenta de un docente
+      description: Usa el mismo correo que el docente tiene en Moodle para que la sincronización le asigne sus cursos.
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearDocenteRequest'
+      responses:
+        '201':
+          description: Docente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocenteDto'
+        '400':
+          description: Datos inválidos o clave temporal débil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '409':
+          description: Ya existe una cuenta con ese correo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/usuarios/docentes/{id}:
+    put:
+      summary: Editar nombre y correo de un docente
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DocenteIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditarDocenteRequest'
+      responses:
+        '200':
+          description: Docente actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocenteDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '404':
+          description: Docente no encontrado
+        '409':
+          description: Ya existe una cuenta con ese correo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/usuarios/docentes/{id}/estado:
+    put:
+      summary: Activar o desactivar la cuenta de un docente
+      description: Un docente desactivado no puede iniciar sesión. Las cuentas no se eliminan para conservar sus cursos e historial.
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DocenteIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarEstadoDocenteRequest'
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocenteDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '404':
+          description: Docente no encontrado
+
+  /api/usuarios/docentes/{id}/desbloquear:
+    post:
+      summary: Quitar el bloqueo por intentos fallidos
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DocenteIdPath'
+      responses:
+        '200':
+          description: Cuenta desbloqueada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocenteDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '404':
+          description: Docente no encontrado
+
+  /api/usuarios/docentes/{id}/restablecer-clave:
+    post:
+      summary: Asignar una nueva clave temporal
+      description: La clave anterior deja de funcionar y la cuenta se desbloquea.
+      tags: [Usuarios]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DocenteIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestablecerClaveRequest'
+      responses:
+        '200':
+          description: Clave restablecida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocenteDto'
+        '400':
+          description: Clave temporal débil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '404':
+          description: Docente no encontrado
+
+  # --- RF-03: sincronización con Moodle (automática cada N minutos y manual) ---
+  /api/sincronizacion/moodle:
+    post:
+      summary: Sincronizar ahora con Moodle
+      description: >-
+        Importa cursos, matrículas, actividades y notas desde Moodle (vía MoodleService) y registra la
+        ejecución. El backend también la ejecuta automáticamente cada MOODLE_SYNC_MINUTOS minutos.
+      tags: [Sincronización]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SincronizarMoodleRequest'
+      responses:
+        '200':
+          description: Registro de la sincronización (fecha, contadores y errores)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionMoodleDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+        '409':
+          description: Ya hay una sincronización en curso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sincronizacion/moodle/historial:
+    get:
+      summary: Historial de sincronizaciones
+      tags: [Sincronización]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Sincronizaciones de la más reciente a la más antigua
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SincronizacionMoodleDto'
+        '403':
+          description: El usuario no es Administrador Técnico
+
+  /api/sincronizacion/moodle/estado:
+    get:
+      summary: Fecha y estado de la última sincronización
+      description: Visible para docentes y administrador (RNF-08, fuente y fecha de los datos).
+      tags: [Sincronización]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Estado de la sincronización
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoSincronizacionDto'
+
+  # --- Fotos de perfil sincronizadas desde Moodle (solo el docente propietario) ---
+  /api/cursos/{cursoId}/fotos:
+    get:
+      summary: Estudiantes del curso que tienen foto de perfil en Moodle
+      tags: [Estudiantes]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Ids de los estudiantes con foto
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+        '403':
+          description: Curso ajeno al docente autenticado o usuario administrador
+        '404':
+          description: Curso no encontrado
+
+  /api/cursos/{cursoId}/estudiantes/{estudianteId}/foto:
+    get:
+      summary: Foto de perfil de un estudiante del curso
+      description: >-
+        La imagen se obtiene de Moodle a través de MoodleService con el token técnico y se guarda una hora en memoria.
+        Responde con Cache-Control private. Solo para el docente propietario del curso (dato personal, RN-11).
+      tags: [Estudiantes]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+        - name: estudianteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Imagen de la foto de perfil
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Curso ajeno al docente autenticado o usuario administrador
+        '404':
+          description: El estudiante no está en el curso o no tiene foto
