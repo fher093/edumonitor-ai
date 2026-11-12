@@ -10,7 +10,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/analisis")]
-[Authorize(Roles = $"{RolNombres.Docente},{RolNombres.AdministradorTecnico}")]
+[Authorize(Roles = RolNombres.Docente)]
 public class AnalisisController(
     AppDbContext db,
     AnaliticaProvider analitica,

@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Actividad> Actividades => Set<Actividad>();
     public DbSet<Calificacion> Calificaciones => Set<Calificacion>();
     public DbSet<ReglaAlerta> ReglasAlerta => Set<ReglaAlerta>();
+    public DbSet<SincronizacionMoodle> SincronizacionesMoodle => Set<SincronizacionMoodle>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,7 +50,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Periodo).HasMaxLength(50).IsRequired();
             e.Property(x => x.EscalaCalificacion).HasPrecision(5, 2);
             e.Property(x => x.Paralelo).HasMaxLength(100);
+            e.Property(x => x.Origen).HasMaxLength(20).IsRequired();
             e.HasIndex(x => new { x.DocenteId, x.Codigo, x.Periodo }).IsUnique();
+            e.HasIndex(x => x.MoodleCourseId).IsUnique().HasFilter("[MoodleCourseId] IS NOT NULL");
         });
 
         modelBuilder.Entity<Estudiante>(e =>
@@ -61,6 +64,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Correo).HasMaxLength(254).IsRequired();
             e.HasIndex(x => x.Identificacion).IsUnique();
             e.HasIndex(x => x.Correo);
+            e.Property(x => x.FotoMoodleRuta).HasMaxLength(300);
+            e.HasIndex(x => x.MoodleUserId);
         });
 
         modelBuilder.Entity<Matricula>(e =>
@@ -81,6 +86,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Tipo).HasMaxLength(40).IsRequired();
             e.Property(x => x.Componente).HasMaxLength(40).IsRequired();
             e.Property(x => x.PuntajeMaximo).HasPrecision(5, 2);
+            e.Property(x => x.MapeoComponente).HasMaxLength(20);
+            e.HasIndex(x => new { x.CursoId, x.MoodleGradeItemId });
             e.HasOne(x => x.Curso).WithMany().HasForeignKey(x => x.CursoId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(x => new { x.CursoId, x.Parcial });
             e.HasIndex(x => new { x.CursoId, x.FechaEntrega });
@@ -97,6 +104,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(x => x.Estudiante).WithMany().HasForeignKey(x => x.EstudianteId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.ActividadId, x.EstudianteId }).IsUnique();
             e.HasIndex(x => x.EstudianteId);
+        });
+
+        modelBuilder.Entity<SincronizacionMoodle>(e =>
+        {
+            e.ToTable("SincronizacionesMoodle");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Estado).HasMaxLength(20).IsRequired();
+            e.Property(x => x.UsuarioCorreo).HasMaxLength(254);
+            e.Property(x => x.UrlMoodle).HasMaxLength(300);
+            e.Property(x => x.Mensaje).HasMaxLength(500);
+            e.HasIndex(x => x.FechaInicio);
         });
 
         modelBuilder.Entity<ReglaAlerta>(e =>

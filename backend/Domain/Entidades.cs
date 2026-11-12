@@ -48,6 +48,11 @@ public class Curso
     public decimal EscalaCalificacion { get; set; } = 20.0m;
     public string? Paralelo { get; set; }
 
+    /// <summary>"moodle" si el curso se importa por sincronización (solo lectura); "local" si se creó en EduMonitor.</summary>
+    public string Origen { get; set; } = OrigenesDatos.Local;
+    public long? MoodleCourseId { get; set; }
+    public DateTime? FechaSincronizacion { get; set; }
+
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }
 
@@ -60,6 +65,9 @@ public class Estudiante
     public string Identificacion { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
     public string Correo { get; set; } = string.Empty;
+    public long? MoodleUserId { get; set; }
+    /// <summary>Ruta de la foto de perfil en Moodle (pluginfile.php); null si no tiene foto.</summary>
+    public string? FotoMoodleRuta { get; set; }
 
     public bool Activo { get; set; } = true;
     public DateTime FechaCreacion { get; set; }
@@ -195,6 +203,11 @@ public class Actividad
     public DateTime? FechaEntrega { get; set; }
     public decimal PuntajeMaximo { get; set; } = 10m;
 
+    /// <summary>Ítem de calificación de Moodle del que proviene la actividad (null si es local).</summary>
+    public long? MoodleGradeItemId { get; set; }
+    /// <summary>Cómo se ubicó en el modelo UTA al sincronizar: idnumber | categoria | inferido.</summary>
+    public string? MapeoComponente { get; set; }
+
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }
 
@@ -218,6 +231,44 @@ public class Calificacion
 
     public DateTime FechaRegistro { get; set; }
     public DateTime FechaActualizacion { get; set; }
+}
+
+public static class OrigenesDatos
+{
+    public const string Local = "local";
+    public const string Moodle = "moodle";
+}
+
+public static class EstadosSincronizacion
+{
+    public const string EnCurso = "en_curso";
+    public const string Exitosa = "exitosa";
+    public const string ConAdvertencias = "con_advertencias";
+    public const string Fallida = "fallida";
+}
+
+/// <summary>Registro de cada sincronización con Moodle: fecha, resultado y errores (RF-03).</summary>
+public class SincronizacionMoodle
+{
+    public int Id { get; set; }
+    public DateTime FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public string Estado { get; set; } = EstadosSincronizacion.EnCurso;
+    public int? UsuarioId { get; set; }
+    public string? UsuarioCorreo { get; set; }
+    public string? UrlMoodle { get; set; }
+
+    public int CursosImportados { get; set; }
+    public int CursosOmitidos { get; set; }
+    public int EstudiantesImportados { get; set; }
+    public int MatriculasActivas { get; set; }
+    public int MatriculasRetiradas { get; set; }
+    public int ActividadesImportadas { get; set; }
+    public int CalificacionesImportadas { get; set; }
+
+    public string? Mensaje { get; set; }
+    /// <summary>Lista JSON de errores y advertencias (curso, mensaje).</summary>
+    public string? DetalleJson { get; set; }
 }
 
 /// <summary>Regla de alerta configurable (HU-10 / RN-04 a RN-06).</summary>

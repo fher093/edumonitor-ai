@@ -13,6 +13,12 @@ public record TokenResult(string Token, DateTime ExpiresAtUtc);
 public interface ITokenService
 {
     TokenResult Crear(Usuario usuario);
+
+    /// <summary>
+    /// Token técnico de corta duración (5 min) para que el backend llame a MoodleService en la
+    /// sincronización automática, sin un usuario que haya iniciado sesión. Nunca sale del servidor.
+    /// </summary>
+    TokenResult CrearTokenSincronizacion();
 }
 
 /// <summary>Emite JWT firmados (HS256) con los claims sub, email, name y role.</summary>
@@ -20,19 +26,28 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider c
 {
     private readonly JwtOptions _opt = options.Value;
 
-    public TokenResult Crear(Usuario usuario)
-    {
-        var ahora = clock.GetUtcNow().UtcDateTime;
-        var expira = ahora.AddMinutes(_opt.ExpMinutes);
-
-        var claims = new List<Claim>
-        {
+    public TokenResult Crear(Usuario usuario) => Emitir(
+        [
             new("sub", usuario.Id.ToString()),
             new("email", usuario.Correo),
             new("name", usuario.Nombre),
-            new("role", usuario.Rol.Nombre),
-            new("jti", Guid.NewGuid().ToString())
-        };
+            new("role", usuario.Rol.Nombre)
+        ],
+        TimeSpan.FromMinutes(_opt.ExpMinutes));
+
+    public TokenResult CrearTokenSincronizacion() => Emitir(
+        [
+            new("sub", "sistema"),
+            new("name", "Sincronización automática"),
+            new("role", RolNombres.AdministradorTecnico)
+        ],
+        TimeSpan.FromMinutes(5));
+
+    private TokenResult Emitir(List<Claim> claims, TimeSpan duracion)
+    {
+        var ahora = clock.GetUtcNow().UtcDateTime;
+        var expira = ahora.Add(duracion);
+        claims.Add(new Claim("jti", Guid.NewGuid().ToString()));
 
         var descriptor = new SecurityTokenDescriptor
         {

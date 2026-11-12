@@ -26,6 +26,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         Set("Seed__Docente__Nombre", "Docente de prueba");
         Set("Seed__Docente__Correo", DocenteCorreo);
         Set("Seed__Docente__Password", DocenteClave);
+        Set("Seed__DatosDemoLocales", "true");
+        Set("Moodle__SincronizacionAutomatica__Habilitada", "false");
     }
 
     private static void Set(string nombre, string valor) => Environment.SetEnvironmentVariable(nombre, valor);

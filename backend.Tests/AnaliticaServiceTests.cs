@@ -162,7 +162,10 @@ public class AnaliticaServiceTests
 
         var alerta = Assert.Single(alertas.Alertas, a => a.Tipo == "descenso");
         Assert.Contains("RN-04", alerta.Regla);
-        Assert.Contains("caída", alerta.Evidencia);
+        // Lenguaje natural con los números que respaldan la alerta (RN-07), sin fórmulas ni símbolos.
+        Assert.Equal(
+            "Sus notas bajaron: en las últimas 3 evaluaciones promedia 8.3 sobre 10, cuando antes tenía 10.0. Se avisa cuando la baja supera 1 punto.",
+            alerta.Evidencia);
         Assert.Equal("alta", alerta.Severidad);
         Assert.Equal(1, alertas.Resumen.Descenso);
     }
@@ -185,10 +188,10 @@ public class AnaliticaServiceTests
         var alertas = Servicio.CalcularAlertasCurso(Contexto(actividades, calificaciones));
 
         var atraso = Assert.Single(alertas.Alertas, a => a.Tipo == "atraso");
-        Assert.Contains("2 actividades vencidas", atraso.Evidencia);
+        Assert.Equal("No entregó 2 actividades que ya vencieron: Actividad 3 y Actividad 4.", atraso.Evidencia);
 
         var finalizacion = Assert.Single(alertas.Alertas, a => a.Tipo == "baja_finalizacion");
-        Assert.Contains("50.0 %", finalizacion.Evidencia);
+        Assert.Equal("Solo completó 2 de las 4 actividades que ya vencieron (50 %). Se espera al menos el 60 %.", finalizacion.Evidencia);
         Assert.Equal(1, alertas.Resumen.EstudiantesAfectados);
     }
 

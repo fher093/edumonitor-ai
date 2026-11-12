@@ -492,9 +492,11 @@ public sealed class AnaliticaService
 
         if (promedioAnteriores - promedioUltimas <= delta) return false;
 
+        // Lenguaje natural, con los números que respaldan la alerta (RN-07).
+        var tramo = k == 1 ? "en su última evaluación obtuvo" : string.Format(Inv, "en las últimas {0} evaluaciones promedia", k);
         evidencia = string.Format(Inv,
-            "El promedio de las últimas {0} evaluaciones es {1:0.00}/10, frente a {2:0.00}/10 de las anteriores; la caída de {3:0.00} puntos supera el umbral Δ={4:0.0}.",
-            k, promedioUltimas, promedioAnteriores, promedioAnteriores - promedioUltimas, delta);
+            "Sus notas bajaron: {0} {1:0.0} sobre 10, cuando antes tenía {2:0.0}. Se avisa cuando la baja supera {3}.",
+            tramo, promedioUltimas, promedioAnteriores, Puntos(delta));
         return true;
     }
 
@@ -512,11 +514,10 @@ public sealed class AnaliticaService
 
         if (sinEntrega.Count < n) return false;
 
-        var nombres = string.Join(", ", sinEntrega.Take(4).Select(i => $"«{i.Actividad.Nombre}»"));
-        if (sinEntrega.Count > 4) nombres += "…";
-        evidencia = string.Format(Inv,
-            "Registra {0} actividades vencidas sin entrega (umbral n={1}): {2}.",
-            sinEntrega.Count, n, nombres);
+        var nombres = ListaNatural(sinEntrega.Select(i => NombreCorto(i.Actividad.Nombre)).ToList(), 4);
+        evidencia = sinEntrega.Count == 1
+            ? $"No entregó 1 actividad que ya venció: {nombres}."
+            : string.Format(Inv, "No entregó {0} actividades que ya vencieron: {1}.", sinEntrega.Count, nombres);
         return true;
     }
 
@@ -534,11 +535,32 @@ public sealed class AnaliticaService
         var porcentaje = (decimal)completadas / vencidas.Count * 100m;
         if (porcentaje >= p) return false;
 
-        evidencia = string.Format(Inv,
-            "Finalización de actividades vencidas: {0:0.0} % ({1} de {2}); el umbral mínimo configurado es p={3:0.0} %.",
-            porcentaje, completadas, vencidas.Count, p);
+        evidencia = completadas == 0
+            ? string.Format(Inv, "No ha completado ninguna de las {0} actividades que ya vencieron. Se espera al menos el {1:0} %.", vencidas.Count, p)
+            : string.Format(Inv, "Solo completó {0} de las {1} actividades que ya vencieron ({2:0} %). Se espera al menos el {3:0} %.",
+                completadas, vencidas.Count, porcentaje, p);
         return true;
     }
+
+    /// <summary>"Lección 2: Evaluación de unidad" -> "Lección 2" (el nombre completo se ve en Actividades).</summary>
+    private static string NombreCorto(string nombre)
+    {
+        var corto = nombre.Split(':')[0].Trim();
+        return corto.Length > 0 ? corto : nombre;
+    }
+
+    /// <summary>Une nombres como en una frase: "A", "A y B", "A, B y C", "A, B, C, D y 2 más".</summary>
+    private static string ListaNatural(IReadOnlyList<string> nombres, int maximo)
+    {
+        if (nombres.Count == 0) return string.Empty;
+        if (nombres.Count > maximo)
+            return $"{string.Join(", ", nombres.Take(maximo))} y {nombres.Count - maximo} más";
+        return nombres.Count == 1 ? nombres[0] : $"{string.Join(", ", nombres.Take(nombres.Count - 1))} y {nombres[^1]}";
+    }
+
+    /// <summary>"1 punto", "1.5 puntos".</summary>
+    private static string Puntos(decimal valor) =>
+        valor == 1m ? "1 punto" : string.Format(Inv, "{0:0.#} puntos", valor);
 
     private static decimal Parametro(ReglaAlerta? regla, string nombre, decimal porDefecto)
     {

@@ -19,6 +19,7 @@ public class AlertasController(
 {
     /// <summary>Alertas académicas con evidencia y reglas aplicadas (HU-10 / RF-07).</summary>
     [HttpGet("curso/{cursoId:int}")]
+    [Authorize(Roles = RolNombres.Docente)]
     [ProducesResponseType<AlertasCursoDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

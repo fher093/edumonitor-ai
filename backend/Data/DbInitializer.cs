@@ -130,6 +130,56 @@ BEGIN
     );
     CREATE UNIQUE INDEX IX_ReglasAlerta_Tipo ON dbo.ReglasAlerta (Tipo);
 END;
+
+-- ---------- Integración con Moodle (RF-02 / RF-03) ----------
+IF COL_LENGTH(N'dbo.Cursos', N'Origen') IS NULL
+    ALTER TABLE dbo.Cursos ADD Origen NVARCHAR(20) NOT NULL CONSTRAINT DF_Cursos_Origen DEFAULT (N'local');
+IF COL_LENGTH(N'dbo.Cursos', N'MoodleCourseId') IS NULL
+    ALTER TABLE dbo.Cursos ADD MoodleCourseId BIGINT NULL;
+IF COL_LENGTH(N'dbo.Cursos', N'FechaSincronizacion') IS NULL
+    ALTER TABLE dbo.Cursos ADD FechaSincronizacion DATETIME2 NULL;
+IF COL_LENGTH(N'dbo.Estudiantes', N'MoodleUserId') IS NULL
+    ALTER TABLE dbo.Estudiantes ADD MoodleUserId BIGINT NULL;
+IF COL_LENGTH(N'dbo.Estudiantes', N'FotoMoodleRuta') IS NULL
+    ALTER TABLE dbo.Estudiantes ADD FotoMoodleRuta NVARCHAR(300) NULL;
+IF COL_LENGTH(N'dbo.Actividades', N'MoodleGradeItemId') IS NULL
+    ALTER TABLE dbo.Actividades ADD MoodleGradeItemId BIGINT NULL;
+IF COL_LENGTH(N'dbo.Actividades', N'MapeoComponente') IS NULL
+    ALTER TABLE dbo.Actividades ADD MapeoComponente NVARCHAR(20) NULL;
+IF COL_LENGTH(N'dbo.Usuarios', N'MoodleUserId') IS NULL
+    ALTER TABLE dbo.Usuarios ADD MoodleUserId BIGINT NULL;
+
+IF OBJECT_ID(N'dbo.SincronizacionesMoodle', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SincronizacionesMoodle (
+        Id                       INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SincronizacionesMoodle PRIMARY KEY,
+        FechaInicio              DATETIME2      NOT NULL,
+        FechaFin                 DATETIME2      NULL,
+        Estado                   NVARCHAR(20)   NOT NULL,
+        UsuarioId                INT            NULL,
+        UsuarioCorreo            NVARCHAR(254)  NULL,
+        UrlMoodle                NVARCHAR(300)  NULL,
+        CursosImportados         INT            NOT NULL CONSTRAINT DF_Sinc_Cursos DEFAULT (0),
+        CursosOmitidos           INT            NOT NULL CONSTRAINT DF_Sinc_Omitidos DEFAULT (0),
+        EstudiantesImportados    INT            NOT NULL CONSTRAINT DF_Sinc_Estudiantes DEFAULT (0),
+        MatriculasActivas        INT            NOT NULL CONSTRAINT DF_Sinc_MatAct DEFAULT (0),
+        MatriculasRetiradas      INT            NOT NULL CONSTRAINT DF_Sinc_MatRet DEFAULT (0),
+        ActividadesImportadas    INT            NOT NULL CONSTRAINT DF_Sinc_Actividades DEFAULT (0),
+        CalificacionesImportadas INT            NOT NULL CONSTRAINT DF_Sinc_Calificaciones DEFAULT (0),
+        Mensaje                  NVARCHAR(500)  NULL,
+        DetalleJson              NVARCHAR(MAX)  NULL
+    );
+    CREATE INDEX IX_SincronizacionesMoodle_Fecha ON dbo.SincronizacionesMoodle (FechaInicio);
+END;
+", ct);
+                    // Índices sobre columnas recién agregadas (lote aparte para que SQL Server las reconozca).
+                    await db.Database.ExecuteSqlRawAsync(@"
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Cursos_MoodleCourseId')
+    CREATE UNIQUE INDEX IX_Cursos_MoodleCourseId ON dbo.Cursos (MoodleCourseId) WHERE MoodleCourseId IS NOT NULL;
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Estudiantes_MoodleUserId')
+    CREATE INDEX IX_Estudiantes_MoodleUserId ON dbo.Estudiantes (MoodleUserId);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Actividades_Curso_MoodleItem')
+    CREATE INDEX IX_Actividades_Curso_MoodleItem ON dbo.Actividades (CursoId, MoodleGradeItemId);
 ", ct);
                 }
                 break;
@@ -144,9 +194,15 @@ END;
 
         await SembrarAsync(db, hasher, config.GetSection("Seed:Admin"), RolNombres.AdministradorTecnico, logger, ct);
         await SembrarAsync(db, hasher, config.GetSection("Seed:Docente"), RolNombres.Docente, logger, ct);
-        await SembrarCursosYEstudiantesAsync(db, logger, ct);
         await SembrarReglasAlertaAsync(db, logger, ct);
-        await SembrarActividadesYCalificacionesAsync(db, logger, ct);
+
+        // Los datos académicos provienen de Moodle (RF-03). Los datos locales de demostración
+        // solo se siembran si se piden explícitamente (pruebas automáticas o demo sin Moodle).
+        if (config.GetValue("Seed:DatosDemoLocales", false))
+        {
+            await SembrarCursosYEstudiantesAsync(db, logger, ct);
+            await SembrarActividadesYCalificacionesAsync(db, logger, ct);
+        }
     }
 
     private static async Task SembrarCursosYEstudiantesAsync(AppDbContext db, ILogger logger, CancellationToken ct)
