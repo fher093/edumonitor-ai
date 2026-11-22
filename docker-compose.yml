@@ -82,6 +82,15 @@ services:
       Jwt__Key: ${JWT_KEY:?Define JWT_KEY en el archivo .env (mínimo 32 caracteres)}
       Jwt__Issuer: ${JWT_ISSUER:-edumonitor-auth}
       Jwt__Audience: ${JWT_AUDIENCE:-edumonitor-clients}
+      # Agente académico (Sprint 3): consulta el backend con el JWT del docente y usa Ollama local.
+      Servicios__BackendUrl: http://backend:8080
+      Ollama__Url: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      Ollama__Modelo: ${OLLAMA_MODELO:-qwen2.5:7b}
+      Ollama__TimeoutSegundos: ${OLLAMA_TIMEOUT:-180}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - backend
     ports:
       - "5100:8080"
 
