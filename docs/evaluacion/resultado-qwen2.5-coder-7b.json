@@ -1,0 +1,337 @@
+{
+  "fecha": "2026-11-22T20:36:36.018Z",
+  "modelo": "qwen2.5-coder:7b",
+  "cursoId": 1,
+  "resultados": [
+    {
+      "id": "E1",
+      "tipo": "escenario",
+      "pregunta": "Dame un resumen del curso",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 63.408,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "El curso Metodologías Ágiles (SW-401) del periodo 2026-B tiene un total de 5 matriculados.",
+            "fuente": "obtener_progreso"
+          },
+          {
+            "texto": "El promedio general del curso es de 10.99, con una desviación estándar de 3.86.",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "4 estudiantes presentan un descenso en sus evaluaciones y requieren atención.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "5 actividades evaluadas presentan un promedio inferior al 60 %.",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "La tendencia general del curso es descenso (-8,0 puntos porcentuales).",
+            "fuente": "generar_resumen"
+          }
+        ],
+        "inferencias": [
+          "El curso está experimentando un declive en el rendimiento de los estudiantes.",
+          "Algunas actividades no están cumpliendo con las expectativas de aprendizaje."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Conversar con Ana Torres sobre las dificultades de sus últimas evaluaciones y ofrecerle una tutoría.",
+            "justificacion": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 3.7 sobre 10, cuando antes tenía 7.0."
+          },
+          {
+            "accion": "Retroalimentar al grupo los contenidos de «Taller 1: Tablero Scrum» (parcial 1) antes de la siguiente evaluación.",
+            "justificacion": "El logro promedio fue 50.0 % con 5 estudiante(s) calificados, por debajo del umbral del 60 %. "
+          },
+          {
+            "accion": "Reforzar el componente de aprendizaje práctico-experimental (30 %) del parcial 1 con actividades de práctica guiada.",
+            "justificacion": "El promedio del componente es 5.00/10 en 5 calificación(es), por debajo de 6/10."
+          }
+        ],
+        "fuentes": [
+          "generar_resumen",
+          "identificar_alertas",
+          "obtener_progreso"
+        ],
+        "fechaCorte": "2026-11-22T20:34:12.0917452Z",
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\": 1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 30,
+            "error": null,
+            "origen": "modelo"
+          },
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 8,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 4,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "53d198af22a0",
+        "duracionMs": 63303
+      },
+      "herramientas": [
+        "generar_resumen",
+        "identificar_alertas",
+        "obtener_progreso"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "E2",
+      "tipo": "escenario",
+      "pregunta": "¿Qué estudiantes necesitan apoyo esta semana?",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 54.24,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "4 estudiantes requieren atención según las reglas de alerta configuradas.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "La actividad con menor rendimiento es «Taller 1: Tablero Scrum» (50,0 % de logro).",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "El promedio del componente Práctico-experimental del parcial 1 es 5.00/10.",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "4 estudiantes no entregaron las actividades vencidas (Lección 3, Taller 2 y Tarea 2).",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "El logro promedio del grupo cambió -8.0 puntos porcentuales entre la primera y la segunda mitad de las actividades evaluadas.",
+            "fuente": "generar_resumen"
+          }
+        ],
+        "inferencias": [
+          "Algunos estudiantes están experimentando un descenso significativo en sus notas.",
+          "Se identificaron problemas específicos en el rendimiento del grupo, especialmente en la actividad de 'Taller 1: Tablero Scrum'.",
+          "La falta de entrega de actividades vencidas es un problema recurrente."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Conversar con Ana Torres sobre las dificultades de sus últimas evaluaciones y ofrecerle una tutoría.",
+            "justificacion": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 3.7 sobre 10, cuando antes tenía 7.0."
+          },
+          {
+            "accion": "Contactar a Carlos López para acordar un plan de entrega de las actividades pendientes.",
+            "justificacion": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 4.0 sobre 10, cuando antes tenía 6.0."
+          },
+          {
+            "accion": "Reforzar el componente de aprendizaje práctico-experimental (30 %) del parcial 2 con actividades de práctica guiada.",
+            "justificacion": "El promedio del componente es 5.00/10 en 4 calificación(es), por debajo de 6/10."
+          }
+        ],
+        "fuentes": [
+          "identificar_alertas",
+          "generar_resumen",
+          "obtener_progreso"
+        ],
+        "fechaCorte": "2026-11-22T20:35:04.9432508Z",
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\": 1, \"tipo_alerta\": \"todas\"}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 4,
+            "error": null,
+            "origen": "modelo"
+          },
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 10,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 2,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "bc67848dfdc9",
+        "duracionMs": 54226
+      },
+      "herramientas": [
+        "identificar_alertas",
+        "generar_resumen",
+        "obtener_progreso"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "E3",
+      "tipo": "escenario",
+      "pregunta": "¿Qué actividades debo reforzar con el grupo?",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 42.579,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "5 de 7 actividades evaluadas presentan un promedio inferior al 60 %.",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "La actividad con menor rendimiento es «Taller 1: Tablero Scrum» (50,0 % de logro).",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "El componente con menor promedio es Práctico-experimental del parcial 1 (5,00/10).",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "4 estudiantes requieren atención según las reglas de alerta configuradas.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "El logro promedio del grupo cambió -8.0 puntos porcentuales entre la primera y la segunda mitad de las actividades evaluadas.",
+            "fuente": "generar_resumen"
+          }
+        ],
+        "inferencias": [
+          "Se necesitan reforzar varias actividades debido a su bajo rendimiento.",
+          "Es importante revisar el componente práctico-experimental del parcial 1."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Retroalimentar al grupo los contenidos de «Taller 1: Tablero Scrum» (parcial 1) antes de la siguiente evaluación.",
+            "justificacion": "logro 50.0 % < 60 %"
+          },
+          {
+            "accion": "Reforzar el componente de aprendizaje práctico-experimental (30 %) del parcial 1 con actividades de práctica guiada.",
+            "justificacion": "Práctico-experimental P1 5.00/10 < 6"
+          },
+          {
+            "accion": "Revisar con el grupo la carga y la metodología de las últimas actividades.",
+            "justificacion": "tendencia -8.0 pp"
+          }
+        ],
+        "fuentes": [
+          "generar_resumen",
+          "identificar_alertas",
+          "obtener_progreso"
+        ],
+        "fechaCorte": "2026-11-22T20:35:50.5580795Z",
+        "advertencias": [
+          "El modelo no pidió herramientas; se consultaron automáticamente los datos del curso antes de responder."
+        ],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 14,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 2,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 3,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "d16108ea2ffe",
+        "duracionMs": 42567
+      },
+      "herramientas": [
+        "generar_resumen",
+        "identificar_alertas",
+        "obtener_progreso"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "F1",
+      "tipo": "fallo",
+      "pregunta": "Muéstrame las alertas del curso con id 9999",
+      "esperado": "sin_acceso",
+      "http": 200,
+      "segundos": 8.095,
+      "respuesta": {
+        "estado": "sin_acceso",
+        "mensaje": "No se encontró el curso o el estudiante indicado entre tus cursos autorizados.",
+        "hechos": [],
+        "inferencias": [],
+        "recomendaciones": [],
+        "fuentes": [],
+        "fechaCorte": null,
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\": 9999}",
+            "exito": false,
+            "codigoHttp": 404,
+            "duracionMs": 7,
+            "error": "No se encontró el curso o el estudiante indicado entre tus cursos autorizados.",
+            "origen": "modelo"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "688b9641f602",
+        "duracionMs": 8088
+      },
+      "herramientas": [
+        "identificar_alertas"
+      ],
+      "cumple": true
+    }
+  ]
+}
