@@ -14,7 +14,7 @@ const TITULOS_SECCION = {
   '/alertas': 'Alertas',
   '/analisis': 'Análisis grupal',
   '/cursos': 'Mis cursos',
-  '/informe': 'Informes',
+  '/informe': 'Informe',
   '/agente': 'Asistente IA',
   '/admin': 'Cuentas de docentes',
   '/admin/moodle': 'Integración con Moodle',
@@ -24,7 +24,7 @@ const TITULOS_SECCION = {
 }
 
 /** Secciones del docente que dependen del curso activo (se muestra el curso en la barra superior). */
-const RUTAS_DE_CURSO = ['/inicio', '/estudiantes', '/actividades', '/alertas', '/analisis']
+const RUTAS_DE_CURSO = ['/inicio', '/estudiantes', '/actividades', '/alertas', '/analisis', '/agente']
 
 export default function Layout() {
   const { usuario } = useAuth()
