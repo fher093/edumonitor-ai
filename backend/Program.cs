@@ -37,6 +37,7 @@ builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AnaliticaService>();
 builder.Services.AddScoped<AnaliticaProvider>();
+builder.Services.AddSingleton<AuditoriaService>(); // HU-17: auditoría de accesos, consultas, cambios y herramientas del agente
 
 // ---------- Integración con Moodle (RF-03): el backend importa lo que extrae MoodleService ----------
 builder.Services.AddHttpClient<IMoodleServiceClient, MoodleServiceHttpClient>(c =>

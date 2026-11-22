@@ -10,6 +10,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/indicadores")]
 [Authorize(Roles = RolNombres.Docente)]
+[Auditar]
 public class IndicadoresController(
     AppDbContext db,
     AnaliticaProvider analitica,

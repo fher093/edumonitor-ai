@@ -11,6 +11,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/analisis")]
 [Authorize(Roles = RolNombres.Docente)]
+[Auditar]
 public class AnalisisController(
     AppDbContext db,
     AnaliticaProvider analitica,
@@ -30,5 +31,21 @@ public class AnalisisController(
         if (contexto is null) return NotFound(new ErrorResponse("Curso no encontrado."));
 
         return Ok(servicio.CalcularAnalisis(contexto));
+    }
+
+    /// <summary>Recomendaciones deterministas justificadas con indicadores (HU-15 / RF-10).</summary>
+    [HttpGet("curso/{cursoId:int}/recomendaciones")]
+    [ProducesResponseType<RecomendacionesCursoDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RecomendacionesCursoDto>> Recomendaciones(int cursoId, CancellationToken ct)
+    {
+        var error = await VerificarAccesoCursoAsync(cursoId, ct);
+        if (error is not null) return error;
+
+        var contexto = await Analitica.CargarAsync(cursoId, ct);
+        if (contexto is null) return NotFound(new ErrorResponse("Curso no encontrado."));
+
+        return Ok(servicio.CalcularRecomendaciones(contexto));
     }
 }

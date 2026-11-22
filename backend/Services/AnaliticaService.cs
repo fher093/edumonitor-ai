@@ -409,6 +409,125 @@ public sealed class AnaliticaService
             advertencias);
     }
 
+    // ---------------------------------------------------------------------
+    // Recomendaciones deterministas (HU-15 / RF-10)
+    // Cada recomendación nace de un indicador verificable; el agente de IA solo las redacta.
+    // ---------------------------------------------------------------------
+    public const decimal UmbralComponenteBajo = 6m; // sobre 10 (equivale al 60 %)
+
+    public RecomendacionesCursoDto CalcularRecomendaciones(ContextoAnalitica contexto)
+    {
+        var evaluaciones = CalcularEvaluaciones(contexto);
+        var alertas = CalcularAlertas(contexto, evaluaciones, ReglasEfectivas(contexto));
+        var analisis = CalcularAnalisis(contexto);
+        var recomendaciones = new List<RecomendacionDto>();
+
+        // 1. Estudiantes con alertas: una recomendación por estudiante con toda su evidencia.
+        foreach (var grupo in alertas.GroupBy(a => a.EstudianteId))
+        {
+            var tipos = grupo.Select(a => a.Tipo).ToHashSet();
+            var nombre = grupo.First().Nombre;
+            var accion = tipos.Contains("atraso") || tipos.Contains("baja_finalizacion")
+                ? $"Contactar a {nombre} para acordar un plan de entrega de las actividades pendientes."
+                : $"Conversar con {nombre} sobre las dificultades de sus últimas evaluaciones y ofrecerle una tutoría.";
+            if (tipos.Contains("descenso") && !accion.StartsWith("Conversar", StringComparison.Ordinal))
+                accion += " Revisar además la baja en sus notas.";
+
+            recomendaciones.Add(new RecomendacionDto(
+                "estudiante",
+                grupo.Any(a => a.Severidad == "alta") ? "alta" : "media",
+                accion,
+                string.Join(" ", grupo.Select(a => a.Evidencia)),
+                string.Join(" · ", grupo.Select(a => a.Regla.Split(' ')[0]).Distinct()),
+                grupo.Key,
+                nombre,
+                null));
+        }
+
+        // 2. Nota final proyectada bajo el mínimo de aprobación (sin alerta que ya lo cubra).
+        var conAlerta = alertas.Select(a => a.EstudianteId).ToHashSet();
+        foreach (var e in evaluaciones.Where(e =>
+                     e.NotaFinal is not null && e.NotaFinal.Value < UmbralAprobacionFinal && !conAlerta.Contains(e.Estudiante.Id)))
+        {
+            recomendaciones.Add(new RecomendacionDto(
+                "estudiante",
+                "alta",
+                $"Revisar con {e.Estudiante.Nombre} los componentes con menor nota antes del cierre del período.",
+                string.Format(Inv, "Su nota final proyectada es {0:0.00}/20, por debajo del mínimo de aprobación ({1:0}/20).",
+                    e.NotaFinal!.Value, UmbralAprobacionFinal),
+                string.Format(Inv, "nota final {0:0.00}/20 < {1:0}", e.NotaFinal.Value, UmbralAprobacionFinal),
+                e.Estudiante.Id,
+                e.Estudiante.Nombre,
+                null));
+        }
+
+        // 3. Actividades con logro grupal bajo el umbral del 60 %.
+        foreach (var a in analisis.DetalleActividades.Where(a => a.ResultadoBajo && a.PromedioPorcentaje.HasValue))
+        {
+            var logro = a.PromedioPorcentaje!.Value;
+            recomendaciones.Add(new RecomendacionDto(
+                "actividad",
+                logro < 40m ? "alta" : "media",
+                $"Retroalimentar al grupo los contenidos de «{a.Nombre}» (parcial {a.Parcial}) antes de la siguiente evaluación.",
+                string.Format(Inv, "El logro promedio fue {0:0.0} % con {1} estudiante(s) calificados, por debajo del umbral del {2:0} %.",
+                    logro, a.Calificados, UmbralResultadoBajo),
+                string.Format(Inv, "logro {0:0.0} % < {1:0} %", logro, UmbralResultadoBajo),
+                null,
+                null,
+                a.ActividadId));
+        }
+
+        // 4. Componentes UTA con promedio bajo.
+        foreach (var c in analisis.Componentes.Where(c => c.PromedioSobre10 is not null && c.PromedioSobre10.Value < UmbralComponenteBajo))
+        {
+            recomendaciones.Add(new RecomendacionDto(
+                "componente",
+                "media",
+                $"Reforzar el componente de {c.Etiqueta.ToLowerInvariant()} del parcial {c.Parcial} con actividades de práctica guiada.",
+                string.Format(Inv, "El promedio del componente es {0:0.00}/10 en {1} calificación(es), por debajo de {2:0}/10.",
+                    c.PromedioSobre10!.Value, c.Calificadas, UmbralComponenteBajo),
+                string.Format(Inv, "{0} P{1} {2:0.00}/10 < {3:0}", c.EtiquetaCorta, c.Parcial, c.PromedioSobre10.Value, UmbralComponenteBajo),
+                null,
+                null,
+                null));
+        }
+
+        // 5. Tendencia del grupo en descenso.
+        if (analisis.TendenciaGeneral == "descenso" && analisis.VariacionTendencia is not null)
+        {
+            recomendaciones.Add(new RecomendacionDto(
+                "grupo",
+                "media",
+                "Revisar con el grupo la carga y la metodología de las últimas actividades.",
+                string.Format(Inv, "El logro promedio del grupo cambió {0:+0.0;-0.0} puntos porcentuales entre la primera y la segunda mitad de las actividades evaluadas.",
+                    analisis.VariacionTendencia.Value),
+                string.Format(Inv, "tendencia {0:+0.0;-0.0} pp", analisis.VariacionTendencia.Value),
+                null,
+                null,
+                null));
+        }
+
+        var advertencias = new List<string>();
+        if (!evaluaciones.Any(e => e.PromedioActividades.HasValue))
+            advertencias.Add("Datos insuficientes: no hay calificaciones registradas para generar recomendaciones.");
+
+        var orden = new[] { "estudiante", "actividad", "componente", "grupo" };
+        var ordenadas = recomendaciones
+            .OrderBy(r => r.Prioridad == "alta" ? 0 : 1)
+            .ThenBy(r => Array.IndexOf(orden, r.Tipo))
+            .ThenBy(r => r.EstudianteNombre ?? string.Empty)
+            .ToList();
+
+        return new RecomendacionesCursoDto(
+            contexto.Curso.Id,
+            contexto.Curso.Nombre,
+            contexto.Curso.Codigo,
+            contexto.Curso.Periodo,
+            contexto.Ahora,
+            ordenadas,
+            advertencias);
+    }
+
     private List<AlertaDto> CalcularAlertas(
         ContextoAnalitica contexto,
         IReadOnlyList<EvaluacionEstudiante> evaluaciones,

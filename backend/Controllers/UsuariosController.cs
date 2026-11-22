@@ -17,9 +17,11 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/usuarios/docentes")]
 [Authorize(Roles = RolNombres.AdministradorTecnico)]
+[Auditar(CategoriasAuditoria.Cambio)]
 public class UsuariosController(AppDbContext db, IPasswordHasher hasher, TimeProvider clock) : ControllerBase
 {
     /// <summary>Lista las cuentas de docentes, con búsqueda por nombre o correo.</summary>
+    [Auditar(Accion = "usuarios.listar")]
     [HttpGet]
     [ProducesResponseType<List<DocenteDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<DocenteDto>>> Listar([FromQuery] string? q, CancellationToken ct)

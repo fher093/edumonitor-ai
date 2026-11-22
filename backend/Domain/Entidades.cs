@@ -281,3 +281,31 @@ public class ReglaAlerta
     public bool Activa { get; set; } = true;
     public DateTime FechaActualizacion { get; set; }
 }
+
+public static class CategoriasAuditoria
+{
+    public const string Acceso = "acceso";     // inicios de sesión
+    public const string Consulta = "consulta"; // lecturas de datos académicos
+    public const string Cambio = "cambio";     // reglas, cuentas, sincronización
+    public const string Agente = "agente";     // herramientas usadas por el agente de IA
+}
+
+/// <summary>
+/// Registro de auditoría (HU-17 / RF-12). Guarda quién hizo qué, sobre qué recurso y con qué resultado.
+/// Nunca guarda contraseñas, tokens, notas ni el contenido de las respuestas.
+/// </summary>
+public class RegistroAuditoria
+{
+    public long Id { get; set; }
+    public DateTime Fecha { get; set; }
+    public int? UsuarioId { get; set; }
+    public string? UsuarioCorreo { get; set; }
+    public string? Rol { get; set; }
+    public string Categoria { get; set; } = CategoriasAuditoria.Consulta;
+    public string Accion { get; set; } = string.Empty;
+    public string? Recurso { get; set; }
+    public string? Detalle { get; set; }
+    public string Resultado { get; set; } = "exito";
+    public int? CodigoHttp { get; set; }
+    public string? Ip { get; set; }
+}

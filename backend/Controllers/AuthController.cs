@@ -1,3 +1,4 @@
+using Backend.Domain;
 using Backend.Dtos;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService auth) : ControllerBase
+public class AuthController(IAuthService auth, AuditoriaService auditoria) : ControllerBase
 {
     /// <summary>Inicia sesión con correo y contraseña y devuelve un JWT con el rol del usuario.</summary>
     [HttpPost("login")]
@@ -21,6 +22,19 @@ public class AuthController(IAuthService auth) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
         var result = await auth.LoginAsync(request.Correo, request.Password, ct);
+
+        // Auditoría del acceso (HU-17): solo el correo y el resultado, nunca la contraseña ni el token.
+        var correo = request.Correo.Trim().ToLowerInvariant();
+        await auditoria.RegistrarAsync(new EventoAuditoria(
+            CategoriasAuditoria.Acceso,
+            "auth.login",
+            result is null ? "fallido" : "exito",
+            result is null ? StatusCodes.Status401Unauthorized : StatusCodes.Status200OK,
+            UsuarioId: result?.Usuario.Id,
+            UsuarioCorreo: correo.Length > 254 ? correo[..254] : correo,
+            Rol: result?.Usuario.Rol,
+            Ip: HttpContext.Connection.RemoteIpAddress?.ToString()), ct);
+
         if (result is null)
             return Unauthorized(new ErrorResponse("Correo o contraseña incorrectos."));
 

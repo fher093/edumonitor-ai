@@ -15,6 +15,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/cursos")]
 [Authorize(Roles = $"{RolNombres.AdministradorTecnico},{RolNombres.Docente}")]
+[Auditar]
 public class CursosController(AppDbContext db) : ControllerBase
 {
     private int ObtenerUsuarioId() =>
