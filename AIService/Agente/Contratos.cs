@@ -43,7 +43,8 @@ public record RespuestaAgenteDto(
     List<PasoTrazaDto> Traza,
     string Modelo,
     string ConsultaId,
-    long DuracionMs);
+    long DuracionMs,
+    string? Respuesta = null); // respuesta directa a la pregunta (1-3 frases), verificada como los hechos
 
 // ---------------------------------------------------------------- Modelo de lenguaje
 

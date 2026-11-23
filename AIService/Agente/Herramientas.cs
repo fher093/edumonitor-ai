@@ -187,6 +187,30 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
                 ["puntaje_maximo"] = Num(a, "puntajeMaximo"),
                 ["estado"] = a.GetProperty("estado").GetString()
             }).ToArray()),
+            // Puntos débiles calculados aquí (no por el modelo): base para responder "¿qué trabajar en una tutoría?".
+            ["actividades_mas_bajas"] = new JsonArray(d.GetProperty("actividades").EnumerateArray()
+                .Where(a => a.TryGetProperty("nota", out var n) && n.ValueKind == JsonValueKind.Number &&
+                            a.GetProperty("puntajeMaximo").GetDecimal() > 0)
+                .OrderBy(a => a.GetProperty("nota").GetDecimal() / a.GetProperty("puntajeMaximo").GetDecimal())
+                .Take(3)
+                .Select(a => (JsonNode?)new JsonObject
+                {
+                    ["nombre"] = a.GetProperty("nombre").GetString(),
+                    ["nota"] = Num(a, "nota"),
+                    ["puntaje_maximo"] = Num(a, "puntajeMaximo")
+                }).ToArray()),
+            ["sin_entrega"] = new JsonArray(d.GetProperty("actividades").EnumerateArray()
+                .Where(a => a.GetProperty("estado").GetString() == "sin_entrega")
+                .Select(a => (JsonNode?)JsonValue.Create(a.GetProperty("nombre").GetString())).ToArray()),
+            // Promedio por componente UTA y parcial: indica en qué tipo de trabajo tiene más dificultades.
+            ["componentes"] = new JsonArray((d.TryGetProperty("componentes", out var comps) ? comps.EnumerateArray().ToList() : [])
+                .Where(c => c.TryGetProperty("promedioSobre10", out var p) && p.ValueKind == JsonValueKind.Number)
+                .Select(c => (JsonNode?)new JsonObject
+                {
+                    ["componente"] = c.GetProperty("etiquetaCorta").GetString(),
+                    ["parcial"] = c.GetProperty("parcial").GetInt32(),
+                    ["promedio_sobre_10"] = Num(c, "promedioSobre10")
+                }).ToArray()),
             ["alertas"] = new JsonArray(d.GetProperty("alertas").EnumerateArray().Select(a => (JsonNode?)new JsonObject
             {
                 ["tipo_alerta"] = a.GetProperty("tipo").GetString(),
@@ -274,7 +298,7 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
                 ["nombre"] = a.GetProperty("nombre").GetString(),
                 ["tipo_alerta"] = a.GetProperty("tipo").GetString(),
                 ["severidad"] = a.GetProperty("severidad").GetString(),
-                ["evidencia"] = a.GetProperty("evidencia").GetString(),
+                ["evidencia"] = $"{a.GetProperty("nombre").GetString()}: {a.GetProperty("evidencia").GetString()}", // con el nombre: el modelo copia la evidencia y no debe quedar sin sujeto
                 ["regla_aplicada"] = CodigoRegla(a.GetProperty("regla").GetString())
             }).ToArray();
 
@@ -350,7 +374,8 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
                 ["prioridad"] = x.GetProperty("prioridad").GetString(),
                 ["accion"] = x.GetProperty("accion").GetString(),
                 ["justificacion"] = x.GetProperty("justificacion").GetString(),
-                ["indicador"] = x.GetProperty("indicador").GetString()
+                ["indicador"] = x.GetProperty("indicador").GetString(),
+                ["estudiante_id"] = x.TryGetProperty("estudianteId", out var est) && est.ValueKind == JsonValueKind.Number ? est.GetInt32() : null
             }).ToArray()),
             ["advertencias"] = Lista(d, "advertencias")
         };

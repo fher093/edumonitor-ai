@@ -39,8 +39,11 @@ public class RutaRapidaTests
 
         Assert.Equal("ok", r.Estado);
         Assert.Single(modelo.Recibidos); // solo la respuesta final
-        Assert.Equal(["generar_resumen", "identificar_alertas", "obtener_progreso"], r.Traza.Select(t => t.Herramienta));
+        // La nómina (obtener_calificaciones) se consulta para reconocer nombres, pero no se envía al modelo.
+        Assert.Equal(["generar_resumen", "identificar_alertas", "obtener_progreso", "obtener_calificaciones"], r.Traza.Select(t => t.Herramienta));
         Assert.All(r.Traza, t => Assert.Equal("orquestador", t.Origen));
+        Assert.DoesNotContain("[obtener_calificaciones]", modelo.Recibidos[0][1].Contenido);
+        Assert.DoesNotContain("obtener_calificaciones", r.Fuentes);
         Assert.Empty(r.Advertencias);
     }
 

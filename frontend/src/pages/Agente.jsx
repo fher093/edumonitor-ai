@@ -26,6 +26,7 @@ function textoRespuesta(r) {
   if (!r) return ''
   if (r.mensaje) return r.mensaje
   return [
+    ...(r.respuesta ? [r.respuesta] : []),
     ...r.hechos.map(h => `Hecho: ${h.texto}`),
     ...r.inferencias.map(i => `Inferencia: ${i}`),
     ...r.recomendaciones.map(x => `Recomendación: ${x.accion}`),
@@ -223,6 +224,7 @@ function RespuestaAgente({ r }) {
 
   return (
     <div className="ws-chat-msg ws-chat-bot">
+      {r.respuesta && <p className="ag-respuesta">{r.respuesta}</p>}
       <Seccion etiqueta="Hechos" clase="ws-chat-tag-fact" cantidad={r.hechos.length} vacio="Sin hechos verificables con los datos actuales.">
         {r.hechos.map((h, i) => (
           <li key={i}>
