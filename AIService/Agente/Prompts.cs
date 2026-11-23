@@ -112,6 +112,54 @@ public static class Prompts
         }
         """).RootElement.Clone();
 
+    /// <summary>El docente pide crear material de apoyo: aquí el modelo sí genera contenido nuevo.</summary>
+    public const string Material = """
+        El docente te pide crear material de apoyo (un deber, preguntas, ejercicios, una guía o un plan breve).
+        Créalo tú. Devuelve un objeto JSON con:
+
+        - "respuesta": una frase que presente el material: para quién es y sobre qué actividad. Sin cifras.
+        - "material": { "titulo": "...", "items": [ ... ] } con exactamente lo que se pide (si pide 5 preguntas,
+          5 elementos). Cada elemento es una pregunta o ejercicio completo, claro y de nivel universitario.
+          El tema sale del nombre de la actividad que menciona el docente y del curso que aparecen en los datos.
+          El sistema no tiene el sílabo: si el nombre de la actividad es general (por ejemplo, "Evaluación de unidad"
+          o "Práctica guiada"), las preguntas tratan de contenidos típicos de la asignatura (por ejemplo, para
+          "Ingeniería Web": HTML, CSS, JavaScript, HTTP, APIs), nunca de la actividad o de cómo se evalúa.
+          No numeres los elementos.
+          Si el material es para un estudiante con notas bajas, empieza por lo básico y sube de dificultad.
+        - "hechos": hasta 2 datos que justifiquen por qué este material le sirve (por ejemplo, su nota en esa
+          actividad), con las cifras copiadas tal cual y "fuente" con el nombre de la herramienta.
+        - "recomendaciones_ids": hasta 1 número de "recomendaciones_base" relacionado, o una lista vacía.
+
+        Escribe en español. El material lo creas tú, pero no inventes notas ni datos de los estudiantes.
+        """;
+
+    public static readonly JsonElement EsquemaMaterial = JsonDocument.Parse("""
+        {
+          "type": "object",
+          "properties": {
+            "respuesta": { "type": "string" },
+            "material": {
+              "type": "object",
+              "properties": {
+                "titulo": { "type": "string" },
+                "items": { "type": "array", "items": { "type": "string" } }
+              },
+              "required": ["titulo", "items"]
+            },
+            "hechos": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "texto": { "type": "string" }, "fuente": { "type": "string" } },
+                "required": ["texto", "fuente"]
+              }
+            },
+            "recomendaciones_ids": { "type": "array", "items": { "type": "integer" } }
+          },
+          "required": ["respuesta", "material", "hechos"]
+        }
+        """).RootElement.Clone();
+
     public static readonly JsonElement EsquemaRespuesta = JsonDocument.Parse("""
         {
           "type": "object",

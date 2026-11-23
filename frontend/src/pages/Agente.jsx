@@ -27,6 +27,7 @@ function textoRespuesta(r) {
   if (r.mensaje) return r.mensaje
   return [
     ...(r.respuesta ? [r.respuesta] : []),
+    ...(r.material ? [`Material: ${r.material.titulo}`] : []),
     ...r.hechos.map(h => `Hecho: ${h.texto}`),
     ...r.inferencias.map(i => `Inferencia: ${i}`),
     ...r.recomendaciones.map(x => `Recomendación: ${x.accion}`),
@@ -201,6 +202,38 @@ function Seccion({ etiqueta, clase, vacio, children, cantidad }) {
   )
 }
 
+/** Material de apoyo generado por la IA (deber, preguntas…): aparte de los datos verificados y con botón para copiarlo. */
+function Material({ m }) {
+  const [copiado, setCopiado] = useState(false)
+  async function copiar() {
+    const texto = [m.titulo, '', ...m.items.map((x, i) => `${i + 1}. ${x}`)].join('\n')
+    try {
+      await navigator.clipboard.writeText(texto)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      /* Sin permiso de portapapeles: el docente puede seleccionar el texto a mano. */
+    }
+  }
+  return (
+    <section className="ag-material">
+      <div className="ag-material-head">
+        <span className="ws-chat-tag ag-material-tag">Material sugerido por IA</span>
+        <button type="button" className="ws-btn ws-btn-ghost ws-btn-sm" onClick={copiar}>
+          {copiado ? 'Copiado' : 'Copiar'}
+        </button>
+      </div>
+      <strong>{m.titulo}</strong>
+      <ol>
+        {m.items.map((x, i) => (
+          <li key={i}>{x}</li>
+        ))}
+      </ol>
+      <p className="ag-material-nota">{m.nota}</p>
+    </section>
+  )
+}
+
 function RespuestaAgente({ r }) {
   const [verTraza, setVerTraza] = useState(false)
 
@@ -225,6 +258,7 @@ function RespuestaAgente({ r }) {
   return (
     <div className="ws-chat-msg ws-chat-bot">
       {r.respuesta && <p className="ag-respuesta">{r.respuesta}</p>}
+      {r.material && <Material m={r.material} />}
       <Seccion etiqueta="Hechos" clase="ws-chat-tag-fact" cantidad={r.hechos.length} vacio="Sin hechos verificables con los datos actuales.">
         {r.hechos.map((h, i) => (
           <li key={i}>

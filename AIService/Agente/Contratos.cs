@@ -16,6 +16,12 @@ public record HechoDto(string Texto, string? Fuente);
 
 public record RecomendacionAgenteDto(string Accion, string Justificacion);
 
+/// <summary>
+/// Material de apoyo generado por el modelo (deber, preguntas, guía…) cuando el docente lo pide. No son datos:
+/// se muestra aparte, con una nota para revisarlo antes de usarlo.
+/// </summary>
+public record MaterialDto(string Titulo, List<string> Items, string Nota);
+
 /// <summary>Una llamada a una herramienta, tal como se muestra en la traza (TT-09).</summary>
 public record PasoTrazaDto(
     string Herramienta,
@@ -44,7 +50,8 @@ public record RespuestaAgenteDto(
     string Modelo,
     string ConsultaId,
     long DuracionMs,
-    string? Respuesta = null); // respuesta directa a la pregunta (1-3 frases), verificada como los hechos
+    string? Respuesta = null, // respuesta directa a la pregunta (1-3 frases), verificada como los hechos
+    MaterialDto? Material = null); // material de apoyo generado (solo cuando el docente pide crear algo)
 
 // ---------------------------------------------------------------- Modelo de lenguaje
 

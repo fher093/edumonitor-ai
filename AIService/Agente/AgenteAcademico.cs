@@ -364,9 +364,10 @@ public sealed class AgenteAcademico(
         // escribe muchos menos tokens y las recomendaciones quedan exactas.
         var recomendacionesBase = RecomendacionesBase(exitosos);
         var conBase = recomendacionesBase.Count > 0;
+        var pideMaterial = PideMaterial(peticion.Mensaje);
         var final = new List<MensajeChat>
         {
-            new("system", conBase ? Prompts.RespuestaFinalConBase : Prompts.RespuestaFinal),
+            new("system", pideMaterial ? Prompts.Material : conBase ? Prompts.RespuestaFinalConBase : Prompts.RespuestaFinal),
             new("user", MensajeFinal(peticion, exitosos.Concat(resultados.Where(r => !r.Exito))))
         };
 
@@ -374,7 +375,7 @@ public sealed class AgenteAcademico(
         for (var intento = 0; intento < 2 && borrador is null; intento++)
         {
             var respuesta = await modelo.ChatAsync(
-                final, null, conBase ? Prompts.EsquemaRespuestaConBase : Prompts.EsquemaRespuesta, ct);
+                final, null, pideMaterial ? Prompts.EsquemaMaterial : conBase ? Prompts.EsquemaRespuestaConBase : Prompts.EsquemaRespuesta, ct);
             borrador = Interpretar(respuesta.Contenido);
         }
         if (borrador is null)
@@ -405,7 +406,13 @@ public sealed class AgenteAcademico(
             .Where(r => VerificadorHechos.EsVerificable($"{r.Accion} {r.Justificacion}", cifras))
             .ToList();
         var recomendacionesOk = propias.Take(conBase ? 2 : 4).ToList();
-        if (conBase)
+        if (pideMaterial)
+        {
+            // Al crear material, a lo sumo una recomendación y solo si el modelo la eligió (sin las de relleno).
+            recomendacionesOk = borrador.IdsRecomendacion.Where(recomendacionesBase.ContainsKey)
+                .Select(id => recomendacionesBase[id]).Concat(propias).Take(1).ToList();
+        }
+        else if (conBase)
         {
             // Las elegidas por número se copian tal cual del backend (no hay nada que verificar). Si el modelo no
             // eligió ninguna ni propuso las suyas, se muestran las dos de mayor prioridad.
@@ -417,7 +424,8 @@ public sealed class AgenteAcademico(
         }
 
         var respuestaDirecta = string.IsNullOrWhiteSpace(borrador.Respuesta) ? null : borrador.Respuesta.Trim();
-        var respuestaDescartada = respuestaDirecta is not null && !VerificadorHechos.EsVerificable(respuestaDirecta, cifras);
+        // En modo material la respuesta solo presenta el material ("5 preguntas sobre…"): no lleva datos que verificar.
+        var respuestaDescartada = respuestaDirecta is not null && !pideMaterial && !VerificadorHechos.EsVerificable(respuestaDirecta, cifras);
         if (respuestaDescartada) respuestaDirecta = null;
 
         var descartadas = hechos.Count - hechosOk.Count + inferencias.Count - inferenciasOk.Count +
@@ -430,14 +438,63 @@ public sealed class AgenteAcademico(
         string? mensaje = soloInsuficientes && EsMensaje(exitosos[0].Contenido, out var primero) ? primero : null;
 
         return Crear(estado, mensaje, hechosOk, inferenciasOk, recomendacionesOk, fuentes,
-            exitosos.Max(r => r.FechaCorte), advertencias, traza, contexto, reloj) with { Respuesta = respuestaDirecta };
+            exitosos.Max(r => r.FechaCorte), advertencias, traza, contexto, reloj) with
+        {
+            Respuesta = respuestaDirecta,
+            // El material es contenido generado, no datos: no pasa por el verificador de cifras y se etiqueta aparte.
+            Material = pideMaterial && borrador.Material is { Items.Count: > 0 } m
+                ? m with { Items = LimpiarItems(m.Items, CantidadPedida(peticion.Mensaje)) }
+                : null
+        };
     }
 
     // ------------------------------------------------------------------ Auxiliares
 
     private sealed record Borrador(
         List<HechoDto> Hechos, List<string> Inferencias, List<RecomendacionAgenteDto> Recomendaciones, List<int> IdsRecomendacion,
-        string? Respuesta = null);
+        string? Respuesta = null, MaterialDto? Material = null);
+
+    public const string NotaMaterial =
+        "Material generado por IA a partir del nombre de la actividad y del curso. Revísalo y ajústalo antes de entregarlo.";
+
+    private static readonly Regex VerboCrear = new(
+        @"\b(cr[eé]a(me|r|lo|la)?|genera(me|r)?|elabora(me|r)?|haz(me)?|hacer|dise[nñ]a(me|r)?|redacta(me|r)?|prepara(me|r)?|prop[oó]n(me)?|proponer|escr[ií]be(me)?|arma(me|r)?|dame)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    private static readonly Regex ObjetoMaterial = new(
+        @"\b(deber(es)?|tareas?|preguntas?|ejercicios?|cuestionarios?|quiz|prueba|examen|gu[ií]a|plan\s+de\s+estudio|r[uú]brica|problemas?|lecturas?|resumen\s+de\s+estudio)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    private static readonly Regex Cantidad = new(
+        @"\b(\d{1,2}|una?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+(preguntas?|ejercicios?|problemas?|items?|ítems?|actividades|lecturas?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    private static readonly Regex NumeracionInicial = new(@"^\s*(\d{1,2}|[a-zA-Z])[\.\)\-:]\s+", RegexOptions.CultureInvariant);
+
+    /// <summary>"5 preguntas" → 5; "tres ejercicios" → 3; null si el docente no indica cuántos.</summary>
+    public static int? CantidadPedida(string mensaje)
+    {
+        var m = Cantidad.Match(mensaje);
+        if (!m.Success) return null;
+        var palabra = m.Groups[1].Value.ToLowerInvariant();
+        var n = int.TryParse(palabra, out var num) ? num : palabra switch
+        {
+            "un" or "una" => 1, "dos" => 2, "tres" => 3, "cuatro" => 4, "cinco" => 5,
+            "seis" => 6, "siete" => 7, "ocho" => 8, "nueve" => 9, _ => 10
+        };
+        return n is > 0 and <= 20 ? n : null;
+    }
+
+    /// <summary>Quita la numeración que el modelo agrega ("1. ¿Qué…?") y respeta la cantidad pedida.</summary>
+    public static List<string> LimpiarItems(IEnumerable<string> items, int? cantidad) =>
+        items.Where(i => !string.IsNullOrWhiteSpace(i))
+            .Select(i => NumeracionInicial.Replace(i.Trim(), string.Empty))
+            .Select(i => i.Length <= 600 ? i : i[..600])
+            .Take(cantidad ?? 15)
+            .ToList();
+
+    /// <summary>¿El docente pide crear material de apoyo? ("créame un deber de 5 preguntas…").</summary>
+    public static bool PideMaterial(string mensaje) => VerboCrear.IsMatch(mensaje) && ObjetoMaterial.IsMatch(mensaje);
 
     private static readonly Regex PideCursos = new(
         @"\b(mis\s+cursos|qu[eé]\s+cursos|otros\s+cursos|todos\s+(mis|los)\s+cursos|cu[aá]ntos\s+cursos|per[ií]odos?)\b",
@@ -588,8 +645,18 @@ public sealed class AgenteAcademico(
                 .ToList();
 
             if (!raiz.TryGetProperty("hechos", out _) && !raiz.TryGetProperty("recomendaciones", out _) &&
-                !raiz.TryGetProperty("recomendaciones_ids", out _)) return null;
-            return new Borrador(hechos, inferencias, recomendaciones, ids, Cadena(raiz, "respuesta"));
+                !raiz.TryGetProperty("recomendaciones_ids", out _) && !raiz.TryGetProperty("material", out _)) return null;
+            MaterialDto? material = null;
+            if (raiz.TryGetProperty("material", out var mat) && mat.ValueKind == JsonValueKind.Object)
+            {
+                var items = Arreglo(mat, "items")
+                    .Select(i => i.ValueKind == JsonValueKind.String ? i.GetString()! : Cadena(i, "pregunta") ?? Cadena(i, "texto") ?? string.Empty)
+                    .ToList();
+                material = new MaterialDto(Cadena(mat, "titulo") ?? "Material de apoyo", items, NotaMaterial);
+            }
+
+            if (material is not null && !raiz.TryGetProperty("hechos", out _)) hechos = [];
+            return new Borrador(hechos, inferencias, recomendaciones, ids, Cadena(raiz, "respuesta"), material);
         }
         catch (JsonException)
         {

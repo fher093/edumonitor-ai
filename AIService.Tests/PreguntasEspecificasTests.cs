@@ -88,7 +88,76 @@ public class PreguntasEspecificasTests
         Assert.Equal(esperado, AgenteAcademico.ConSujeto(hecho, [alertas]));
     }
 
-        [Fact]
+        [Theory]
+    [InlineData("creame un deber rapido de 5 preguntas para la Leccion 2 para ayudar a Maria Gomez", true)]
+    [InlineData("Genera 3 ejercicios del Taller 2", true)]
+    [InlineData("hazme una guía de estudio para Ana Torres", true)]
+    [InlineData("¿Qué estudiantes necesitan apoyo esta semana?", false)]
+    [InlineData("¿Qué preguntas tuvieron más errores?", false)] // pregunta por datos, no pide crear
+    public void Detecta_cuando_se_pide_crear_material(string mensaje, bool esperado)
+    {
+        Assert.Equal(esperado, AgenteAcademico.PideMaterial(mensaje));
+    }
+
+    [Fact]
+    public async Task Pedir_un_deber_devuelve_material_generado_aparte_de_los_hechos_verificados()
+    {
+        var (agente, modelo, _) = Crear();
+        modelo.Responde("""
+            {
+              "respuesta": "Deber de 5 preguntas sobre la Lección 3 para Ana Torres.",
+              "material": { "titulo": "Deber: Lección 3", "items": [
+                "¿Qué es una API REST?", "Nombra 2 métodos HTTP.", "¿Qué devuelve un código 404?",
+                "Explica qué es JSON.", "Diseña 1 endpoint para listar cursos." ] },
+              "hechos": [
+                { "texto": "Ana Torres obtuvo 2.5/10 en la Lección 3.", "fuente": "obtener_calificaciones" },
+                { "texto": "Ana Torres obtuvo 9.9/10 en la Lección 3.", "fuente": "obtener_calificaciones" }
+              ],
+              "recomendaciones_ids": []
+            }
+            """);
+
+        var r = await agente.ResponderAsync(
+            new PeticionChat("Créame un deber de 5 preguntas de la Lección 3 para Ana Torres", 1), Contexto, CancellationToken.None);
+
+        Assert.Contains("crear material de apoyo", modelo.Recibidos[0][0].Contenido); // instrucciones del modo material
+        Assert.NotNull(r.Material);
+        Assert.Equal(5, r.Material!.Items.Count);  // el material no pasa por el verificador de cifras
+        Assert.Equal(AgenteAcademico.NotaMaterial, r.Material.Nota);
+        Assert.Equal("Deber de 5 preguntas sobre la Lección 3 para Ana Torres.", r.Respuesta);
+        var hecho = Assert.Single(r.Hechos);         // los hechos sí se verifican: 9.9/10 no está en los datos
+        Assert.Contains("2.5/10", hecho.Texto);
+    }
+
+    [Theory]
+    [InlineData("creame un deber de 5 preguntas", 5)]
+    [InlineData("Genera tres ejercicios del Taller 2", 3)]
+    [InlineData("hazme una guía de estudio", null)]
+    public void Detecta_la_cantidad_pedida(string mensaje, int? esperado)
+    {
+        Assert.Equal(esperado, AgenteAcademico.CantidadPedida(mensaje));
+    }
+
+    [Fact]
+    public void Limpia_la_numeracion_y_respeta_la_cantidad()
+    {
+        var items = AgenteAcademico.LimpiarItems(["1. ¿Qué es HTML?", "2) Explica CSS.", "c- Define HTTP.", "4. Extra", "5. Extra"], 3);
+
+        Assert.Equal(["¿Qué es HTML?", "Explica CSS.", "Define HTTP."], items);
+    }
+
+    [Fact]
+    public async Task Las_preguntas_normales_no_devuelven_material()
+    {
+        var (agente, modelo, _) = Crear();
+        modelo.Responde("""{ "respuesta": "Ana Torres necesita apoyo.", "hechos": [], "inferencias": [], "recomendaciones_ids": [1], "material": { "titulo": "x", "items": ["y"] } }""");
+
+        var r = await agente.ResponderAsync(new PeticionChat("¿Cómo va Ana Torres?", 1), Contexto, CancellationToken.None);
+
+        Assert.Null(r.Material);
+    }
+
+    [Fact]
     public void En_un_seguimiento_usa_el_estudiante_de_la_pregunta_anterior()
     {
         var id = AgenteAcademico.EstudianteMencionado(["¿Qué temas debe tener la tutoría?", "¿Qué necesita Ana Torres?"], Nomina);

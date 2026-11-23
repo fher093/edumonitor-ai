@@ -533,3 +533,41 @@
   font-weight: 500;
   color: var(--color-ink-black);
 }
+
+/* Material de apoyo generado por la IA: separado de los datos verificados */
+.ag-material {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px dashed var(--color-cloud);
+}
+
+.ag-material-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ag-material-tag {
+  background: #fff4e5;
+  color: #9a5b00;
+}
+
+.ag-material ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.ag-material li + li {
+  margin-top: 4px;
+}
+
+.ag-material-nota {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--color-ash);
+}
