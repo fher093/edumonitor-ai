@@ -140,6 +140,17 @@ Ejemplo real (SW-402), "¿qué temas debe tener la tutoría para Ana Torres?": *
 
 Costo: la respuesta directa y el contexto adicional suben el tiempo a **15–35 s** (antes 13–19 s). Pruebas: `AIService.Tests/PreguntasEspecificasTests.cs`.
 
+### 2.7 Material de apoyo generado (23-nov-2026)
+
+Cuando el docente pide **crear** algo ("créame un deber de 5 preguntas de la Lección 2 para María Gómez", "genera 3 ejercicios del Taller 2"), el agente entra en **modo material**: el modelo genera el contenido a partir del nombre de la actividad y del curso. Es la única parte de la respuesta que el modelo inventa, así que:
+
+- Se muestra **aparte**, con la etiqueta *Material sugerido por IA* y la nota *"revísalo y ajústalo antes de entregarlo"*, más un botón **Copiar**.
+- **No pasa por el verificador de cifras** (es contenido nuevo, no datos), pero los **hechos que lo justifican sí** (p. ej., *"Nota en Lección 2: 3/10"*).
+- El código respeta la **cantidad pedida** ("3 ejercicios" → 3) y quita la numeración que agrega el modelo.
+- Como el sistema no tiene el sílabo, si la actividad tiene un nombre genérico ("Evaluación de unidad"), las preguntas tratan de contenidos típicos de la asignatura (HTML, CSS, HTTP, APIs en Ingeniería Web).
+
+Ejemplo real (SW-402, 20 s): *"¿Qué es el método HTTP y cómo se utiliza en las peticiones web?"*, *"Explique los conceptos básicos de HTML5…"*, *"Realice un ejemplo sencillo de cómo crear un formulario HTML con validaciones básicas."* Pruebas: `PreguntasEspecificasTests` (modo material, cantidad y numeración).
+
 ---
 
 ## 3. Comparación con `qwen2.5:7b` (modelo elegido)
