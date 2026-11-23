@@ -44,6 +44,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteHandlerOptions>(o =
 
 // ---------- Agente académico (HU-12 a HU-15, TT-09) ----------
 builder.Services.Configure<OllamaOptions>(config.GetSection(OllamaOptions.Section));
+builder.Services.Configure<AgenteOptions>(config.GetSection(AgenteOptions.Section));
 builder.Services.AddHttpClient<OllamaClient>((sp, c) =>
 {
     var o = sp.GetRequiredService<IOptions<OllamaOptions>>().Value;

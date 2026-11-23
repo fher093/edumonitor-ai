@@ -28,7 +28,7 @@ public static class Prompts
         que aparecen en el mensaje del usuario. Devuelve un objeto JSON con tres listas:
 
         - "hechos": las afirmaciones más relevantes para la pregunta, con las cifras copiadas tal cual de los datos
-          (máximo 5, una frase corta cada una). Cada hecho lleva "fuente" con el nombre exacto de la herramienta
+          (máximo 4, una frase corta cada una). Cada hecho lleva "fuente" con el nombre exacto de la herramienta
           de la que sale (generar_resumen, identificar_alertas, obtener_progreso, obtener_calificaciones o
           listar_cursos_autorizados).
         - "inferencias": interpretaciones prudentes de esos hechos (máximo 2, una frase cada una). Sin cifras nuevas.
@@ -47,6 +47,45 @@ public static class Prompts
         "Datos insuficientes", dilo como hecho. Si una sección no aplica, déjala vacía.
         Usa los nombres de los estudiantes tal como aparecen. Las alertas son señales de seguimiento, no diagnósticos.
         """;
+
+    /// <summary>
+    /// Variante cuando hay recomendaciones deterministas: el modelo no las redacta, solo elige sus números.
+    /// Con un modelo local, generar texto es lo más lento (~15 tokens/s); esto reduce la respuesta a la mitad.
+    /// </summary>
+    public const string RespuestaFinalConBase = """
+        Responde al docente, en español, usando EXCLUSIVAMENTE los datos de las herramientas que aparecen en el
+        mensaje del usuario. Devuelve un objeto JSON con:
+
+        - "hechos": las afirmaciones más relevantes para la pregunta, con las cifras copiadas tal cual de los datos
+          (máximo 4, una frase corta cada una). Cada hecho lleva "fuente" con el nombre exacto de la herramienta
+          de la que sale (generar_resumen, identificar_alertas, obtener_progreso u obtener_calificaciones).
+        - "inferencias": interpretaciones prudentes de esos hechos (máximo 2, una frase corta cada una). Sin cifras nuevas.
+        - "recomendaciones_ids": los números ("id") de hasta 3 elementos de "recomendaciones_base" que mejor
+          respondan la pregunta, del más al menos importante. No escribas recomendaciones nuevas.
+
+        Reglas: sé breve; no inventes datos; si algo no está en los datos, no lo menciones. Si los datos dicen
+        "Datos insuficientes", dilo como hecho. Usa los nombres de los estudiantes tal como aparecen.
+        Las alertas son señales de seguimiento, no diagnósticos.
+        """;
+
+    public static readonly JsonElement EsquemaRespuestaConBase = JsonDocument.Parse("""
+        {
+          "type": "object",
+          "properties": {
+            "hechos": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "texto": { "type": "string" }, "fuente": { "type": "string" } },
+                "required": ["texto", "fuente"]
+              }
+            },
+            "inferencias": { "type": "array", "items": { "type": "string" } },
+            "recomendaciones_ids": { "type": "array", "items": { "type": "integer" } }
+          },
+          "required": ["hechos", "inferencias", "recomendaciones_ids"]
+        }
+        """).RootElement.Clone();
 
     public static readonly JsonElement EsquemaRespuesta = JsonDocument.Parse("""
         {

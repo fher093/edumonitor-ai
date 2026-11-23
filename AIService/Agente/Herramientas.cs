@@ -191,7 +191,7 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
             {
                 ["tipo_alerta"] = a.GetProperty("tipo").GetString(),
                 ["evidencia"] = a.GetProperty("evidencia").GetString(),
-                ["regla_aplicada"] = a.GetProperty("regla").GetString()
+                ["regla_aplicada"] = CodigoRegla(a.GetProperty("regla").GetString())
             }).ToArray())
         };
         return Exito(ObtenerCalificaciones, textoArgs, r.CodigoHttp, resultado, FechaAhora(), reloj);
@@ -275,7 +275,7 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
                 ["tipo_alerta"] = a.GetProperty("tipo").GetString(),
                 ["severidad"] = a.GetProperty("severidad").GetString(),
                 ["evidencia"] = a.GetProperty("evidencia").GetString(),
-                ["regla_aplicada"] = a.GetProperty("regla").GetString()
+                ["regla_aplicada"] = CodigoRegla(a.GetProperty("regla").GetString())
             }).ToArray();
 
         if (alertas.Length == 0)
@@ -324,11 +324,14 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
             ["en_riesgo"] = d.GetProperty("estudiantesEnRiesgo").GetInt32(),
             ["actividades_totales"] = d.GetProperty("actividadesTotales").GetInt32(),
             ["actividades_evaluadas"] = d.GetProperty("actividadesEvaluadas").GetInt32(),
-            ["distribucion"] = new JsonArray(d.GetProperty("distribucion").EnumerateArray().Select(x => (JsonNode?)new JsonObject
-            {
-                ["rango"] = x.GetProperty("etiqueta").GetString(),
-                ["estudiantes"] = x.GetProperty("cantidad").GetInt32()
-            }).ToArray()),
+            // Datos compactos: el modelo lee rápido, pero cada token de entrada ocupa contexto en la GPU.
+            ["distribucion_porcentaje"] = new JsonArray(d.GetProperty("distribucion").EnumerateArray()
+                .Where(x => x.GetProperty("cantidad").GetInt32() > 0)
+                .Select(x => (JsonNode?)new JsonObject
+                {
+                    ["rango"] = x.GetProperty("rango").GetString(),
+                    ["estudiantes"] = x.GetProperty("cantidad").GetInt32()
+                }).ToArray()),
             ["actividades_bajo_60"] = new JsonArray(a.GetProperty("detalleActividades").EnumerateArray()
                 .Where(x => x.GetProperty("resultadoBajo").GetBoolean())
                 .Select(x => (JsonNode?)new JsonObject
@@ -340,8 +343,10 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
                 }).ToArray()),
             ["tendencia_general"] = a.GetProperty("tendenciaGeneral").GetString(),
             ["hallazgos"] = Lista(a, "hallazgos"),
-            ["recomendaciones_base"] = new JsonArray(rc.GetProperty("recomendaciones").EnumerateArray().Select(x => (JsonNode?)new JsonObject
+            // Numeradas: el agente le pide al modelo que elija por "id" en lugar de redactarlas (HU-15).
+            ["recomendaciones_base"] = new JsonArray(rc.GetProperty("recomendaciones").EnumerateArray().Take(MaxRecomendacionesBase).Select((x, i) => (JsonNode?)new JsonObject
             {
+                ["id"] = i + 1,
                 ["prioridad"] = x.GetProperty("prioridad").GetString(),
                 ["accion"] = x.GetProperty("accion").GetString(),
                 ["justificacion"] = x.GetProperty("justificacion").GetString(),
@@ -372,6 +377,11 @@ public sealed class HerramientasAcademicas(IBackendAcademico backend)
     }
 
     private static JsonObject Mensaje(string texto) => new() { ["mensaje"] = texto };
+
+    public const int MaxRecomendacionesBase = 8;
+
+    /// <summary>"RN-04 · Descenso en las últimas evaluaciones" → "RN-04".</summary>
+    private static string? CodigoRegla(string? regla) => regla?.Split(' ', 2)[0];
 
     private static JsonNode? Num(JsonElement e, string propiedad) =>
         e.TryGetProperty(propiedad, out var v) && v.ValueKind == JsonValueKind.Number

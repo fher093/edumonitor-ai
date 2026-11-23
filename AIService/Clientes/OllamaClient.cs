@@ -13,18 +13,20 @@ public sealed class OllamaOptions
     public string Modelo { get; set; } = "qwen2.5:7b";
     public int TimeoutSegundos { get; set; } = 180;
     public double Temperatura { get; set; } = 0.1;
-    public int ContextoTokens { get; set; } = 8192;
+    public int ContextoTokens { get; set; } = 6144;
     /// <summary>Tope de tokens al elegir herramientas: una llamada ocupa pocos tokens y evita redactar texto que se descarta.</summary>
     public int MaxTokensHerramientas { get; set; } = 300;
     /// <summary>Tope de tokens de la respuesta final estructurada.</summary>
     public int MaxTokensRespuesta { get; set; } = 900;
+    /// <summary>Tiempo que Ollama mantiene el modelo en memoria tras la última petición (evita recargarlo: 10-20 s).</summary>
+    public string KeepAlive { get; set; } = "60m";
 }
 
 /// <summary>
 /// Cliente de Ollama (/api/chat) con function calling y salida estructurada (format = JSON Schema).
 /// El modelo corre en el propio equipo: los datos no salen a servicios externos (RN-11).
 /// </summary>
-public sealed class OllamaClient(HttpClient http, IOptions<OllamaOptions> opciones) : IModeloLenguaje
+public sealed class OllamaClient(HttpClient http, IOptions<OllamaOptions> opciones, ILogger<OllamaClient> logger) : IModeloLenguaje
 {
     private readonly OllamaOptions _o = opciones.Value;
 
@@ -40,6 +42,7 @@ public sealed class OllamaClient(HttpClient http, IOptions<OllamaOptions> opcion
         {
             ["model"] = _o.Modelo,
             ["stream"] = false,
+            ["keep_alive"] = _o.KeepAlive,
             ["messages"] = new JsonArray(mensajes.Select(ConvertirMensaje).ToArray<JsonNode?>()),
             ["options"] = new JsonObject
             {
@@ -83,6 +86,7 @@ public sealed class OllamaClient(HttpClient http, IOptions<OllamaOptions> opcion
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
         if (!doc.RootElement.TryGetProperty("message", out var mensaje))
             throw new ModeloNoDisponibleException("Ollama devolvió una respuesta sin mensaje.");
+        RegistrarMetricas(doc.RootElement, herramientas is { Count: > 0 } ? "herramientas" : "respuesta");
 
         var contenido = mensaje.TryGetProperty("content", out var c) ? c.GetString() ?? string.Empty : string.Empty;
         var llamadas = new List<LlamadaHerramienta>();
@@ -110,6 +114,17 @@ public sealed class OllamaClient(HttpClient http, IOptions<OllamaOptions> opcion
         }
 
         return new MensajeChat("assistant", contenido, llamadas);
+    }
+
+    /// <summary>Tokens y tiempos de cada llamada (para medir el rendimiento del agente, TT-11).</summary>
+    private void RegistrarMetricas(JsonElement r, string fase)
+    {
+        static long Num(JsonElement e, string p) => e.TryGetProperty(p, out var v) && v.TryGetInt64(out var n) ? n : 0;
+        logger.LogInformation(
+            "Ollama {Fase}: {Entrada} tokens de entrada en {MsEntrada} ms, {Salida} tokens generados en {MsSalida} ms, carga {MsCarga} ms, total {MsTotal} ms",
+            fase, Num(r, "prompt_eval_count"), Num(r, "prompt_eval_duration") / 1_000_000,
+            Num(r, "eval_count"), Num(r, "eval_duration") / 1_000_000,
+            Num(r, "load_duration") / 1_000_000, Num(r, "total_duration") / 1_000_000);
     }
 
     /// <summary>

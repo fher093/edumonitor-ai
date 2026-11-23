@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 
 namespace AIService.Agente;
 
@@ -15,12 +17,20 @@ namespace AIService.Agente;
 ///    usando solo los datos de las herramientas.
 /// 4. Verificación: se descartan las afirmaciones con cifras que no aparecen en los datos.
 /// Si el modelo no devuelve un JSON válido, se responde con los datos de las herramientas sin redactar.
+///
+/// Ruta rápida (por defecto en producción): en las preguntas sobre un curso, el orquestador ejecuta
+/// directamente las herramientas del análisis completo y el modelo se usa una sola vez, para redactar.
+/// Con un modelo local, cada token generado cuesta ~65 ms: evitar la fase de herramientas ahorra 10-25 s.
 /// </summary>
 public sealed class AgenteAcademico(
     IModeloLenguaje modelo,
     HerramientasAcademicas herramientas,
-    ILogger<AgenteAcademico> logger)
+    ILogger<AgenteAcademico> logger,
+    IOptions<AgenteOptions>? opciones = null)
 {
+    // Sin opciones (pruebas unitarias del ciclo clásico) se usa la ruta en la que el modelo elige las herramientas.
+    private readonly bool _rutaRapida = opciones?.Value.RutaRapida ?? false;
+
     public const int MaxRondas = 4;
     public const int MaxLlamadasPorRonda = 5;
     private const int MaxHistorial = 6;
@@ -30,6 +40,31 @@ public sealed class AgenteAcademico(
         var reloj = Stopwatch.StartNew();
         var advertencias = new List<string>();
         var resultados = new List<ResultadoHerramienta>();
+
+        var plan = _rutaRapida ? PlanRapido(peticion) : null;
+        if (plan is not null)
+        {
+            // ------------------------------------------------ Ruta rápida: herramientas sin consultar al modelo
+            foreach (var (nombre, curso) in plan)
+            {
+                var resultado = await EjecutarAutomaticaAsync(nombre, curso, contexto, ct);
+                resultados.Add(resultado);
+                if (resultado.SinAcceso) break; // curso ajeno o inexistente: no se insiste
+            }
+        }
+        else
+        {
+            await FaseHerramientasAsync(peticion, contexto, resultados, advertencias, ct);
+        }
+
+        return await ResponderConDatosAsync(peticion, contexto, resultados, advertencias, reloj, ct);
+    }
+
+    /// <summary>Ciclo clásico: el modelo elige las herramientas; luego consulta mínima y análisis completo.</summary>
+    private async Task FaseHerramientasAsync(
+        PeticionChat peticion, ContextoConsulta contexto, List<ResultadoHerramienta> resultados,
+        List<string> advertencias, CancellationToken ct)
+    {
         var cache = new Dictionary<string, ResultadoHerramienta>();
 
         // ------------------------------------------------ 1. Fase de herramientas
@@ -93,7 +128,12 @@ public sealed class AgenteAcademico(
                              r.Nombre == n && Entero(r.Argumentos, "curso_id") == curso && Entero(r.Argumentos, "estudiante_id") is null)))
                     resultados.Add(await EjecutarAutomaticaAsync(nombre, curso, contexto, ct));
         }
+    }
 
+    private async Task<RespuestaAgenteDto> ResponderConDatosAsync(
+        PeticionChat peticion, ContextoConsulta contexto, List<ResultadoHerramienta> resultados,
+        List<string> advertencias, Stopwatch reloj, CancellationToken ct)
+    {
         var exitosos = resultados.Where(r => r.Exito).ToList();
         var traza = resultados
             .Select(r => new PasoTrazaDto(r.Nombre, r.Argumentos, r.Exito, r.CodigoHttp, r.DuracionMs, r.Error, r.Origen))
@@ -114,16 +154,21 @@ public sealed class AgenteAcademico(
 
         // ------------------------------------------------ 3. Fase de respuesta estructurada
         var fuentes = exitosos.Select(r => r.Nombre).Distinct().ToList();
+        // Si hay recomendaciones deterministas (HU-15), el modelo solo elige cuáles mostrar por su número:
+        // escribe muchos menos tokens y las recomendaciones quedan exactas.
+        var recomendacionesBase = RecomendacionesBase(exitosos);
+        var conBase = recomendacionesBase.Count > 0;
         var final = new List<MensajeChat>
         {
-            new("system", Prompts.RespuestaFinal),
+            new("system", conBase ? Prompts.RespuestaFinalConBase : Prompts.RespuestaFinal),
             new("user", MensajeFinal(peticion.Mensaje, resultados))
         };
 
         Borrador? borrador = null;
         for (var intento = 0; intento < 2 && borrador is null; intento++)
         {
-            var respuesta = await modelo.ChatAsync(final, null, Prompts.EsquemaRespuesta, ct);
+            var respuesta = await modelo.ChatAsync(
+                final, null, conBase ? Prompts.EsquemaRespuestaConBase : Prompts.EsquemaRespuesta, ct);
             borrador = Interpretar(respuesta.Contenido);
         }
         if (borrador is null)
@@ -151,6 +196,14 @@ public sealed class AgenteAcademico(
         var recomendacionesOk = recomendaciones
             .Where(r => VerificadorHechos.EsVerificable($"{r.Accion} {r.Justificacion}", cifras))
             .ToList();
+        if (conBase && recomendacionesOk.Count == 0)
+        {
+            // Las elegidas por número se copian tal cual del backend (no hay nada que verificar). Si el modelo
+            // no eligió ninguna válida, se muestran las dos de mayor prioridad.
+            var elegidas = borrador.IdsRecomendacion.Distinct().Where(recomendacionesBase.ContainsKey).Take(3).ToList();
+            if (elegidas.Count == 0) elegidas = recomendacionesBase.Keys.Order().Take(2).ToList();
+            recomendacionesOk = elegidas.Select(id => recomendacionesBase[id]).ToList();
+        }
 
         var descartadas = hechos.Count - hechosOk.Count + inferencias.Count - inferenciasOk.Count +
                           recomendaciones.Count - recomendacionesOk.Count;
@@ -167,7 +220,47 @@ public sealed class AgenteAcademico(
 
     // ------------------------------------------------------------------ Auxiliares
 
-    private sealed record Borrador(List<HechoDto> Hechos, List<string> Inferencias, List<RecomendacionAgenteDto> Recomendaciones);
+    private sealed record Borrador(
+        List<HechoDto> Hechos, List<string> Inferencias, List<RecomendacionAgenteDto> Recomendaciones, List<int> IdsRecomendacion);
+
+    private static readonly Regex PideCursos = new(
+        @"\b(mis\s+cursos|qu[eé]\s+cursos|otros\s+cursos|todos\s+(mis|los)\s+cursos|cu[aá]ntos\s+cursos|per[ií]odos?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    private static readonly Regex PideEstudiantes = new(
+        @"\b(notas?|calificaci\w*|estudiantes?|alumn\w*|qui[eé]n(es)?|aprob\w*|reprob\w*|promedios?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Herramientas de la ruta rápida, o null si la pregunta necesita que el modelo elija (listado de cursos,
+    /// períodos o sin curso activo). Si el docente nombra otro curso, se consulta ese: el backend decide si
+    /// tiene acceso (RN-12).
+    /// </summary>
+    public static IReadOnlyList<(string Nombre, int Curso)>? PlanRapido(PeticionChat peticion)
+    {
+        var curso = CursoMencionado(peticion.Mensaje) ?? peticion.CursoId;
+        if (curso is null || PideCursos.IsMatch(peticion.Mensaje)) return null;
+        var plan = HerramientasBase.Select(n => (n, curso.Value)).ToList();
+        if (PideEstudiantes.IsMatch(peticion.Mensaje)) plan.Add((HerramientasAcademicas.ObtenerCalificaciones, curso.Value));
+        return plan;
+    }
+
+    /// <summary>Recomendaciones deterministas devueltas por generar_resumen, por su número ("id").</summary>
+    private static Dictionary<int, RecomendacionAgenteDto> RecomendacionesBase(IEnumerable<ResultadoHerramienta> exitosos)
+    {
+        var resultado = new Dictionary<int, RecomendacionAgenteDto>();
+        foreach (var r in exitosos.Where(r => r.Nombre == HerramientasAcademicas.GenerarResumen))
+        {
+            if (JsonNode.Parse(r.Contenido)?["recomendaciones_base"] is not JsonArray lista) continue;
+            foreach (var x in lista)
+            {
+                if (x?["id"] is null || x["accion"] is null) continue;
+                resultado[x["id"]!.GetValue<int>()] = new RecomendacionAgenteDto(
+                    x["accion"]!.GetValue<string>(), x["justificacion"]?.GetValue<string>() ?? string.Empty);
+            }
+        }
+        return resultado;
+    }
 
     private RespuestaAgenteDto Crear(
         string estado, string? mensaje, List<HechoDto> hechos, List<string> inferencias,
@@ -260,8 +353,14 @@ public sealed class AgenteAcademico(
                     : new RecomendacionAgenteDto(Cadena(r, "accion") ?? string.Empty, Cadena(r, "justificacion") ?? string.Empty))
                 .ToList();
 
-            if (!raiz.TryGetProperty("hechos", out _) && !raiz.TryGetProperty("recomendaciones", out _)) return null;
-            return new Borrador(hechos, inferencias, recomendaciones);
+            var ids = Arreglo(raiz, "recomendaciones_ids")
+                .Select(i => i.ValueKind == JsonValueKind.Number && i.TryGetInt32(out var n) ? n : 0)
+                .Where(n => n > 0)
+                .ToList();
+
+            if (!raiz.TryGetProperty("hechos", out _) && !raiz.TryGetProperty("recomendaciones", out _) &&
+                !raiz.TryGetProperty("recomendaciones_ids", out _)) return null;
+            return new Borrador(hechos, inferencias, recomendaciones, ids);
         }
         catch (JsonException)
         {
@@ -290,7 +389,7 @@ public sealed class AgenteAcademico(
                 recomendaciones.AddRange(recs.Take(4).Select(x => new RecomendacionAgenteDto(
                     x!["accion"]!.GetValue<string>(), $"{x["justificacion"]} ({x["indicador"]})")));
         }
-        return new Borrador(hechos.Take(8).ToList(), [], recomendaciones);
+        return new Borrador(hechos.Take(8).ToList(), [], recomendaciones, []);
     }
 
     private static bool EsMensaje(string contenido, out string mensaje)

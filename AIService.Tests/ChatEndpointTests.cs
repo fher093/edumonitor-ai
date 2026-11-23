@@ -103,7 +103,8 @@ public class ChatEndpointTests : IDisposable
     [Fact]
     public async Task Docente_recibe_respuesta_estructurada()
     {
-        _modelo.PideHerramientas(("identificar_alertas", """{"curso_id":1}""")).Responde("").Responde("""
+        // Configuración real: ruta rápida, una sola llamada al modelo (la respuesta final).
+        _modelo.Responde("""
             { "hechos": [ { "texto": "Hay 2 alertas.", "fuente": "identificar_alertas" } ], "inferencias": [], "recomendaciones": [] }
             """);
 
