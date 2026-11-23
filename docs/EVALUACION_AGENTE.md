@@ -91,9 +91,36 @@ Mitigaciones vigentes:
 
 Mejora propuesta (fuera del MVP): que el modelo cite el identificador de la alerta o actividad en cada hecho para verificar también la relación.
 
-### 2.5 Rendimiento
+### 2.5 Rendimiento: optimización del 23-nov-2026
 
-El tiempo de respuesta (40–65 s) depende del hardware: con 6 GB de VRAM, parte del modelo corre en CPU. La consulta de datos (herramientas) tarda menos de 100 ms en total; el resto es generación de texto. Para la demostración se recomienda **precalentar el modelo** con una pregunta antes de empezar. Un modelo de 3B o una GPU con más memoria reduciría el tiempo, a costa de calidad en el primer caso.
+Con 40–70 s por respuesta, el asistente no era usable en una demostración. Se midió cada llamada a Ollama (tokens y tiempos, registrados por `OllamaClient`):
+
+| Fase (antes) | Tokens de entrada | Tokens generados | Tiempo |
+| --- | --- | --- | --- |
+| Elegir herramientas (1.ª llamada) | ~850 | 20–80 | 2–5 s |
+| Elegir herramientas (2.ª llamada, texto que se descarta) | 1 600–2 000 | 140–300 | 9–19 s |
+| Respuesta final | ~2 700 | 470–620 | 32–41 s |
+| Carga del modelo (tras 5 min sin uso) | — | — | 11–17 s |
+
+**Hallazgo:** el modelo **lee** ~1 000 tokens/s pero **genera** solo ~15 tokens/s (parte del modelo corre en CPU con 6 GB de VRAM). El tiempo depende casi solo de cuántos tokens escribe.
+
+Cambios aplicados:
+
+1. **Ruta rápida** (`Agente:RutaRapida`): en preguntas sobre un curso, el orquestador ejecuta directamente resumen, alertas y progreso (y calificaciones si la pregunta trata de estudiantes o notas) y el modelo se usa **una sola vez**, para redactar. Las preguntas sobre otros cursos o períodos siguen el ciclo en el que el modelo elige las herramientas. La traza lo indica (`origen: orquestador`).
+2. **Recomendaciones por número:** el modelo ya no redacta las recomendaciones; elige hasta 3 de las recomendaciones deterministas del backend por su `id`. Escribe la mitad de tokens y las recomendaciones quedan **exactas** (sin riesgo de inventar).
+3. **Respuestas más breves** (4 hechos, 2 inferencias) y **datos compactos** (distribución sin rangos vacíos, código de la regla en vez del nombre completo).
+4. **Modelo siempre cargado** (`keep_alive: 60m`) y contexto de 6 144 tokens.
+
+| Id | Antes | Después (modelo cargado) |
+| --- | --- | --- |
+| E1 Resumen del curso | 70 s | **19 s** |
+| E2 ¿Quién necesita apoyo? | 57 s | **13 s** |
+| E3 ¿Qué reforzar? | 42 s | **16 s** |
+| F1 Curso ajeno | 7 s | **0,03 s** (sin llamar al modelo) |
+
+Resultados completos: `docs/evaluacion/resultado-qwen2.5-coder-7b-optimizado.json`. Los tres escenarios siguen cumpliendo y las recomendaciones de E3 pasaron a ser más pertinentes (actividad y componente en lugar de estudiantes). Pruebas: `AIService.Tests/RutaRapidaTests.cs`.
+
+La primera pregunta tras arrancar el servicio sigue pagando la carga del modelo (~17 s): para la demostración, hacer una pregunta antes de empezar. Se descartó usar una API de IA de pago para mantener RN-11 (los datos no salen del equipo).
 
 ---
 
@@ -113,7 +140,7 @@ node docs/evaluacion/evaluar-agente.mjs docente@edumonitor.local "<clave>" <curs
 | Escenarios E1–E3 cumplidos | 3/3 (E2 con la limitación 2.4) | Pendiente |
 | Fallo F1 (curso ajeno) | ✅ | Pendiente |
 | Calidad del español | Correcta, algo literal | Pendiente |
-| Tiempo medio (E1–E3) | 53 s | Pendiente |
+| Tiempo medio (E1–E3) | 53 s → **16 s** tras la optimización (2.5) | Pendiente |
 
 ---
 

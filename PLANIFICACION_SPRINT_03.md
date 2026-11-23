@@ -70,7 +70,7 @@ La primera evaluación con `qwen2.5-coder:7b` (ver `docs/EVALUACION_AGENTE.md`) 
 | Una pregunta sobre un curso ajeno se respondía con el curso activo | La consulta automática usa el curso que el docente nombra; el backend responde 403/404. |
 | El modelo usaba una sola herramienta | El orquestador completa resumen, alertas y progreso (HU-13); la traza indica el origen de cada consulta. |
 | Una recomendación sin respaldo (contactar a los padres) | Instrucciones más estrictas: solo acciones del docente, justificadas con datos. |
-| Respuestas de hasta 150 s | Tope de tokens y respuestas más breves: 40–65 s en la GPU de 6 GB. |
+| Respuestas de hasta 150 s | Tope de tokens y respuestas más breves (40–65 s); luego ruta rápida con una sola llamada al modelo, recomendaciones elegidas por número y modelo siempre cargado: **13–19 s** (23-nov). Se descartó una API de IA de pago para mantener RN-11. |
 
 ---
 
