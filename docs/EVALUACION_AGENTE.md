@@ -122,6 +122,24 @@ Resultados completos: `docs/evaluacion/resultado-qwen2.5-coder-7b-optimizado.jso
 
 La primera pregunta tras arrancar el servicio sigue pagando la carga del modelo (~17 s): para la demostración, hacer una pregunta antes de empezar. Se descartó usar una API de IA de pago para mantener RN-11 (los datos no salen del equipo).
 
+### 2.6 Respuestas que se adaptan a la pregunta (23-nov-2026)
+
+Al probar en la web se vio que, tras la optimización, el agente daba casi la misma respuesta a preguntas distintas ("¿qué estudiantes necesitan apoyo?", "¿sobre qué sería la tutoría de Ana Torres?", "¿qué temas debe tener?"). Causas encontradas y corrección:
+
+| Problema observado | Causa | Corrección |
+| --- | --- | --- |
+| Las preguntas de seguimiento no se entendían | La llamada final no recibía la conversación | Se envían las **preguntas anteriores del docente** (no las respuestas del asistente, que arrastraban errores de una respuesta a otra). |
+| Sobre Ana Torres se hablaba con datos del grupo | Nunca se consultaba su ficha | El orquestador **reconoce al estudiante nombrado** (también en seguimientos, sin tildes o solo por nombre o apellido si es único) y consulta su **ficha individual**. |
+| Le atribuía a Ana la evidencia de María Gómez | El modelo recibía las alertas de todos | En preguntas sobre un estudiante, el modelo recibe **solo sus datos** (sus alertas, entregas y recomendaciones). |
+| "Temas de la tutoría" vagos | Los datos estaban pero el modelo no los usaba | Puntos débiles **calculados en código** (3 notas más bajas, entregas pendientes, promedio por componente) y una **recomendación de tutoría determinista**. |
+| Siempre las mismas recomendaciones | Solo podía elegir de la lista del curso | Puede proponer hasta 2 **recomendaciones propias**, verificadas contra los datos. |
+| Sin respuesta directa | El formato solo tenía hechos, inferencias y recomendaciones | Campo **respuesta** (1–3 frases), verificado como los hechos. |
+| Hechos sin sujeto ("Sus notas bajaron…") | El modelo recortaba el nombre al copiar la evidencia | La evidencia incluye el nombre y, si el modelo lo quita, se repone en código. |
+
+Ejemplo real (SW-402), "¿qué temas debe tener la tutoría para Ana Torres?": *"La tutoría para Ana Torres debe centrarse en Taller 2: Proyecto aplicado, Taller 1: Práctica guiada y Lección 3: Evaluación de unidad."* con la recomendación *"Preparar una tutoría con Ana Torres centrada en … y acordar la entrega de Tarea 3"* — justificada con sus notas (2/10, 3/10, 3/10). Coincide con su ficha. El sistema no tiene los temas del sílabo: los "temas" son las actividades y componentes con notas bajas.
+
+Costo: la respuesta directa y el contexto adicional suben el tiempo a **15–35 s** (antes 13–19 s). Pruebas: `AIService.Tests/PreguntasEspecificasTests.cs`.
+
 ---
 
 ## 3. Comparación con `qwen2.5:7b` (modelo elegido)
