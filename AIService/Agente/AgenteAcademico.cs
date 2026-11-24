@@ -83,7 +83,10 @@ public sealed class AgenteAcademico(
         if (!nomina.Exito) return;
 
         var textos = new List<string> { peticion.Mensaje };
-        textos.AddRange((peticion.Historial ?? []).Where(m => m.Rol is "docente" or "user").Select(m => m.Texto).Reverse().Take(3));
+        // Seguimientos cortos ("¿y por cuál empiezo?") heredan el estudiante de las preguntas anteriores; una pregunta
+        // sobre el grupo ("¿cuáles son los otros estudiantes?") no, aunque antes se haya hablado de alguien.
+        if (!PreguntaPorElGrupo(peticion.Mensaje))
+            textos.AddRange((peticion.Historial ?? []).Where(m => m.Rol is "docente" or "user").Select(m => m.Texto).Reverse().Take(3));
         var estudiante = EstudianteMencionado(textos, nomina.Contenido);
 
         if (estudiante is { } id)
@@ -214,6 +217,13 @@ public sealed class AgenteAcademico(
             1 => nombres[0],
             _ => $"{string.Join(", ", nombres.Take(nombres.Count - 1))} y {nombres[^1]}"
         };
+
+    private static readonly Regex Grupo = new(
+        @"\b(otr[oa]s|dem[aá]s|tod[oa]s|estudiantes|alumn[oa]s|grupo|curso|clase|qui[eé]nes|cu[aá]les|resto|compa[nñ]er[oa]s)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    /// <summary>¿La pregunta trata del grupo (y no de un estudiante concreto)?</summary>
+    public static bool PreguntaPorElGrupo(string mensaje) => Grupo.IsMatch(mensaje);
 
     /// <summary>Id del estudiante de la nómina nombrado en los textos (el primero que nombre a alguien).</summary>
     public static int? EstudianteMencionado(IEnumerable<string> textos, string nominaJson)

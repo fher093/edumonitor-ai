@@ -157,6 +157,33 @@ public class PreguntasEspecificasTests
         Assert.Null(r.Material);
     }
 
+    [Theory]
+    [InlineData("¿cuáles son los otros 4 estudiantes?", true)]
+    [InlineData("¿y los demás?", true)]
+    [InlineData("¿cómo va el resto del curso?", true)]
+    [InlineData("¿y por cuál empiezo?", false)]
+    [InlineData("¿qué temas debe tener la tutoría?", false)]
+    public void Distingue_preguntas_sobre_el_grupo(string mensaje, bool esperado)
+    {
+        Assert.Equal(esperado, AgenteAcademico.PreguntaPorElGrupo(mensaje));
+    }
+
+    [Fact]
+    public async Task Una_pregunta_sobre_el_grupo_no_hereda_el_estudiante_de_la_conversacion()
+    {
+        var (agente, modelo, backend) = Crear();
+        modelo.Responde("""{ "respuesta": "Los otros son María Gómez y Pedro Castillo.", "hechos": [], "inferencias": [], "recomendaciones_ids": [] }""");
+        var historial = new List<MensajeHistorial> { new("docente", "¿Qué temas debe tener la tutoría para Ana Torres?") };
+
+        var r = await agente.ResponderAsync(
+            new PeticionChat("¿cuáles son los otros estudiantes?", 1, historial), Contexto, CancellationToken.None);
+
+        Assert.DoesNotContain(backend.Llamadas, l => l.Ruta.Contains("/estudiantes/"));  // no se consulta la ficha de Ana
+        var aModelo = modelo.Recibidos[0][1].Contenido;
+        Assert.Contains("María Gómez", aModelo);                                          // el modelo ve al grupo
+        Assert.Contains("Pedro Castillo", aModelo);
+    }
+
     [Fact]
     public void En_un_seguimiento_usa_el_estudiante_de_la_pregunta_anterior()
     {
