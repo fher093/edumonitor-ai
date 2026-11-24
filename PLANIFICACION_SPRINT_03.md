@@ -70,6 +70,7 @@ La primera evaluación con `qwen2.5-coder:7b` (ver `docs/EVALUACION_AGENTE.md`) 
 | Una pregunta sobre un curso ajeno se respondía con el curso activo | La consulta automática usa el curso que el docente nombra; el backend responde 403/404. |
 | El modelo usaba una sola herramienta | El orquestador completa resumen, alertas y progreso (HU-13); la traza indica el origen de cada consulta. |
 | Una recomendación sin respaldo (contactar a los padres) | Instrucciones más estrictas: solo acciones del docente, justificadas con datos. |
+| Modelo local lento para la demostración (15–35 s) | Selector **Local / Gemini** en el chat (24-nov): Gemini opcional con nombres seudonimizados (RN-11) y respaldo automático a Ollama; 2–8 s por respuesta. Ollama sigue siendo el modelo por defecto. |
 | Respuestas de hasta 150 s | Tope de tokens y respuestas más breves (40–65 s); luego ruta rápida con una sola llamada al modelo, recomendaciones elegidas por número y modelo siempre cargado: **13–19 s** (23-nov). Se descartó una API de IA de pago para mantener RN-11. |
 
 ---
@@ -251,7 +252,7 @@ La primera evaluación con `qwen2.5-coder:7b` (ver `docs/EVALUACION_AGENTE.md`) 
 - [x] Historias HU-12 a HU-17 implementadas en backend, agente y frontend.
 - [x] El agente usa al menos tres herramientas y respeta RN-09, RN-11 y RN-12.
 - [x] Recomendaciones deterministas cubiertas por pruebas unitarias (`RecomendacionesTests`).
-- [x] Pruebas de permisos, integración, rendimiento y del agente en verde: **157 pruebas** (88 backend, 48 agente, 21 MoodleService).
+- [x] Pruebas de permisos, integración, rendimiento y del agente en verde: **213 pruebas** (88 backend, 104 agente, 21 MoodleService).
 - [x] `dotnet build`, `dotnet test` y `npm run build` en verde.
 - [ ] Evaluación del agente documentada (TT-11): completa con `qwen2.5-coder:7b`; falta la corrida con `qwen2.5:7b` (descarga pendiente).
 - [x] `docs/openapi.yaml`, `docs/sql/07-auditoria.sql`, README y matriz RF/RNF actualizados.

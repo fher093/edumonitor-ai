@@ -151,6 +151,24 @@ Cuando el docente pide **crear** algo ("créame un deber de 5 preguntas de la Le
 
 Ejemplo real (SW-402, 20 s): *"¿Qué es el método HTTP y cómo se utiliza en las peticiones web?"*, *"Explique los conceptos básicos de HTML5…"*, *"Realice un ejemplo sencillo de cómo crear un formulario HTML con validaciones básicas."* Pruebas: `PreguntasEspecificasTests` (modo material, cantidad y numeración).
 
+### 2.8 Gemini como opción para la demostración (24-nov-2026)
+
+Para que la demostración sea fluida, el chat tiene un selector **Local / Gemini**. Ollama sigue siendo el modelo por defecto y no cambió; Gemini (API de Google AI Studio, capa gratuita) es opcional:
+
+- **Privacidad (RN-11):** antes de enviar, `Seudonimizador` reemplaza los nombres de los estudiantes por "Estudiante A, B…" (aunque se escriban sin tildes, o solo el nombre o el apellido si es único) y los repone al recibir la respuesta. Lo comprueba una prueba de punta a punta que inspecciona lo enviado a Google.
+- **Respaldo:** ante un 503/429, reintenta y prueba `gemini-3.5-flash`; si Gemini sigue sin responder, la consulta continúa con Ollama y el chat lo avisa.
+- **Mismo agente:** herramientas, permisos, verificador de cifras, modo material y auditoría no cambian.
+- **Configuración:** `GEMINI_API_KEY` en `.env` (nunca en el repositorio); sin clave, la opción aparece deshabilitada.
+
+| Pregunta (SW-402) | Local (qwen2.5-coder:7b) | Gemini (flash-lite) |
+| --- | --- | --- |
+| ¿Qué estudiantes necesitan apoyo? | 25 s | 3,3 s |
+| Temas de la tutoría para Ana Torres | 15 s | 1,8 s |
+| ¿Y por cuál empiezo? | 15 s | 7,7 s* |
+| Deber de 5 preguntas para María Gómez | 20 s | 24,6 s* |
+
+* El modelo rápido respondió 503 (saturado) y contestó `gemini-3.5-flash` tras el reintento. Con el modelo rápido disponible, las respuestas tardan 2–8 s. Además, Gemini razona mejor ("empieza por el Taller 2, su nota más baja: 2/10") y genera material más específico. Pruebas: `AIService.Tests/GeminiTests.cs` (19 pruebas).
+
 ---
 
 ## 3. Comparación con `qwen2.5:7b` (modelo elegido)

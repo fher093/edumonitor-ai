@@ -1,6 +1,6 @@
 # Matriz de cumplimiento RF / RNF (TT-12)
 
-**Proyecto:** EduMonitor AI · **Corte:** cierre del Sprint 3 (26-nov-2026) · **Pruebas automáticas:** 157 en verde (`dotnet test EduMonitor.slnx`: 88 backend, 48 agente, 21 MoodleService).
+**Proyecto:** EduMonitor AI · **Corte:** cierre del Sprint 3 (26-nov-2026) · **Pruebas automáticas:** 213 en verde (`dotnet test EduMonitor.slnx`: 88 backend, 104 agente, 21 MoodleService).
 
 Leyenda: ✅ cumplido y verificado · ⚠️ cumplido con limitación documentada.
 
@@ -32,7 +32,7 @@ Leyenda: ✅ cumplido y verificado · ⚠️ cumplido con limitación documentad
 | RNF-03 | Confiabilidad: errores y datos ausentes | ✅ | “Datos insuficientes” en lugar de métricas engañosas (RN-08); el agente no responde sin datos; Ollama caído → 503 con mensaje; JSON inválido → 400 | `Curso_sin_calificaciones_responde_datos_insuficientes`, `Backend_caido_avisa_el_error_sin_responder_de_memoria`, `Modelo_caido_devuelve_503_con_mensaje_claro`, `Cuerpo_que_no_es_utf8_devuelve_400_y_no_500` |
 | RNF-04 | Usabilidad | ✅ | Escalas explícitas, filtros, mensajes de error, estado del modelo visible en el chat, sugerencias de preguntas | Revisión en la Sprint Review |
 | RNF-05 | Mantenibilidad | ✅ | Ramas por funcionalidad y PR, Docker Compose, CI (`.github/workflows/ci.yml`), README, OpenAPI, scripts SQL 01–07, planificaciones de los 3 sprints | CI en verde |
-| RNF-06 | Calidad: pruebas unitarias, de integración y reproducibilidad | ✅ | 157 pruebas xUnit; evaluación del agente repetible con `docs/evaluacion/evaluar-agente.mjs` | `dotnet test EduMonitor.slnx` |
+| RNF-06 | Calidad: pruebas unitarias, de integración y reproducibilidad | ✅ | 213 pruebas xUnit; evaluación del agente repetible con `docs/evaluacion/evaluar-agente.mjs` | `dotnet test EduMonitor.slnx` |
 | RNF-07 | Rendimiento: consultas paginadas y tiempos medidos | ⚠️ | Auditoría paginada (máx. 200 por página) e indexada; tiempos de la API medidos en prueba (< 500 ms de media). El agente responde en 13–19 s con el modelo local cargado en una GPU de 6 GB, tras la optimización (`EVALUACION_AGENTE.md` §2.5). | `Indicadores_alertas_e_informe_responden_en_tiempo_acotado`, `Auditoria_esta_paginada_y_ordenada_de_la_mas_reciente` |
 | RNF-08 | Transparencia: fuente, fecha e incertidumbre | ✅ | Fuente y fecha de sincronización en la barra superior y en el informe; alertas con evidencia; el chat muestra fuentes, fecha de corte, advertencias y traza de herramientas; descarte de afirmaciones no verificables | `Hecho_con_cifra_inventada_se_descarta`, `Informe_incluye_encabezado_fecha_de_corte_y_todas_las_secciones` |
 
@@ -48,7 +48,7 @@ Leyenda: ✅ cumplido y verificado · ⚠️ cumplido con limitación documentad
 | RN-08 Datos insuficientes | Dashboard, recomendaciones, herramientas del agente | `Sin_calificaciones_advierte_datos_insuficientes` |
 | RN-09 El agente solo usa datos de herramientas | Consulta mínima, verificador de cifras, eliminación de fuentes no consultadas | `AgenteTests` |
 | RN-10 Sin mensajes automáticos | El agente solo sugiere; instrucción explícita sin terceros | Revisión de prompts |
-| RN-11 IA local | Ollama en el equipo; datos mínimos | `ChatEndpointTests`, configuración |
+| RN-11 IA local | Ollama en el equipo por defecto; datos mínimos. Gemini opcional (demostración) con nombres seudonimizados antes de enviarse | `ChatEndpointTests`, `GeminiTests` (lo enviado a Google no contiene nombres reales) |
 | RN-12 Mínimo privilegio | `VerificarAccesoCursoAsync`; el agente hereda el JWT del docente | `Sprint2EndpointsTests`, `Sprint3EndpointsTests`, `Curso_ajeno_responde_sin_acceso_y_no_inventa_datos` |
 
 ## 4. Pendientes al cierre

@@ -41,6 +41,7 @@ Sistema inteligente de seguimiento del rendimiento académico integrado con Mood
 - **Recomendaciones justificadas (HU-15):** el backend calcula recomendaciones deterministas (acción + indicador, p. ej. *logro 52.0 % < 60 %*); el agente las usa como base.
 - **Informe del período (HU-16):** curso, período, docente, fecha de corte, fuente, métricas, hallazgos, alertas y recomendaciones, con botón **Descargar PDF**.
 - **Auditoría (HU-17):** el administrador consulta accesos, consultas académicas, cambios y herramientas usadas por el agente, con filtros y paginación. Nunca se guardan contraseñas, tokens, notas ni las preguntas.
+- **Gemini opcional para la demostración:** selector **Local / Gemini** en el chat. Con Gemini (clave en `GEMINI_API_KEY`), los nombres de los estudiantes se seudonimizan antes de enviarse y, si no responde, contesta el modelo local. Respuestas de 2–8 s frente a 15–35 s del modelo local.
 - **IA local (RN-11):** el modelo corre en el equipo con Ollama (`qwen2.5:7b` por defecto). Evaluación con el modelo real: [`docs/EVALUACION_AGENTE.md`](docs/EVALUACION_AGENTE.md).
 
 ### Reglas académicas UTA
@@ -175,7 +176,7 @@ El contrato completo con esquemas y ejemplos está en [`docs/openapi.yaml`](docs
 dotnet test EduMonitor.slnx
 ```
 
-- **157 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory): 88 del backend, 48 del agente y 21 de MoodleService.
+- **213 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory): 88 del backend, 104 del agente y 21 de MoodleService.
 - `backend.Tests/AnaliticaServiceTests.cs`: ponderación 40/30/30, nota final, estados, alertas, tendencias y escalas.
 - `backend.Tests/Sprint2EndpointsTests.cs`: consulta de actividades y calificaciones en solo lectura, permisos por curso, dashboard, ficha, alertas, reglas y filtros.
 - `backend.Tests/RecomendacionesTests.cs`: recomendaciones deterministas (TDD).
