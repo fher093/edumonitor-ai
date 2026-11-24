@@ -87,6 +87,9 @@ services:
       Ollama__Url: ${OLLAMA_URL:-http://host.docker.internal:11434}
       Ollama__Modelo: ${OLLAMA_MODELO:-qwen2.5:7b}
       Ollama__TimeoutSegundos: ${OLLAMA_TIMEOUT:-180}
+      # Gemini (opcional, solo para la demostración): se elige en el chat; sin clave queda desactivado.
+      Gemini__ApiKey: ${GEMINI_API_KEY:-}
+      Gemini__Modelo: ${GEMINI_MODELO:-gemini-flash-lite-latest}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

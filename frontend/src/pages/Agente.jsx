@@ -44,7 +44,27 @@ export default function Agente() {
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [estadoIA, setEstadoIA] = useState(null)
+  const [proveedor, setProveedorEstado] = useState(() => {
+    try {
+      return localStorage.getItem(CLAVE_PROVEEDOR) === 'gemini' ? 'gemini' : 'ollama'
+    } catch {
+      return 'ollama'
+    }
+  })
   const finRef = useRef(null)
+
+  function setProveedor(valor) {
+    setProveedorEstado(valor)
+    try {
+      localStorage.setItem(CLAVE_PROVEEDOR, valor)
+    } catch {
+      /* Sin almacenamiento: la elección dura mientras la página esté abierta. */
+    }
+  }
+
+  // Si Gemini no está configurado en el servidor, se usa el modelo local.
+  const geminiDisponible = Boolean(estadoIA?.gemini?.configurado)
+  const proveedorEfectivo = proveedor === 'gemini' && geminiDisponible ? 'gemini' : 'ollama'
 
   useEffect(() => {
     let vivo = true
@@ -77,7 +97,7 @@ export default function Agente() {
     setTexto('')
     setEnviando(true)
     try {
-      const respuesta = await api('/api/ia/chat', { method: 'POST', body: { mensaje: limpia, cursoId, historial } })
+      const respuesta = await api('/api/ia/chat', { method: 'POST', body: { mensaje: limpia, cursoId, historial, proveedor: proveedorEfectivo } })
       setMensajes(prev => [...prev, { rol: 'agente', respuesta }])
     } catch (err) {
       setMensajes(prev => [...prev, { rol: 'error', texto: err.message }])
@@ -98,7 +118,14 @@ export default function Agente() {
         meta={`${curso} · responde solo con datos de tus herramientas`}
         acciones={
           <>
-            <EstadoModelo estado={estadoIA} />
+            <SelectorModelo
+              estado={estadoIA}
+              valor={proveedorEfectivo}
+              onCambio={setProveedor}
+              geminiDisponible={geminiDisponible}
+              deshabilitado={enviando}
+            />
+            <EstadoModelo estado={estadoIA} proveedor={proveedorEfectivo} />
             <button
               type="button"
               className="ws-btn ws-btn-ghost ws-btn-sm"
@@ -177,8 +204,52 @@ export default function Agente() {
   )
 }
 
-function EstadoModelo({ estado }) {
+const CLAVE_PROVEEDOR = 'edumonitor_ia_proveedor'
+
+/** Selector del modelo: local (Ollama, privado) o Gemini (más rápido, nombres seudonimizados). */
+function SelectorModelo({ valor, onCambio, geminiDisponible, deshabilitado }) {
+  return (
+    <div className="ag-selector" role="radiogroup" aria-label="Modelo de IA">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={valor === 'ollama'}
+        className={valor === 'ollama' ? 'is-active' : ''}
+        onClick={() => onCambio('ollama')}
+        disabled={deshabilitado}
+        title="Modelo local en este equipo: los datos no salen de la universidad"
+      >
+        Local
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={valor === 'gemini'}
+        className={valor === 'gemini' ? 'is-active' : ''}
+        onClick={() => onCambio('gemini')}
+        disabled={deshabilitado || !geminiDisponible}
+        title={
+          geminiDisponible
+            ? 'Gemini (Google): más rápido. Los nombres de los estudiantes se reemplazan por seudónimos antes de enviarse.'
+            : 'Gemini no está configurado (falta GEMINI_API_KEY en el servidor)'
+        }
+      >
+        Gemini
+      </button>
+    </div>
+  )
+}
+
+function EstadoModelo({ estado, proveedor }) {
   if (!estado) return null
+  if (proveedor === 'gemini') {
+    return (
+      <span className="ws-pill ws-pill-ok" title="Los nombres se seudonimizan antes de enviarse; si Gemini falla, responde el modelo local">
+        <span className="ag-dot is-ok" aria-hidden="true" />
+        {estado.gemini?.modelo} · seudonimizado
+      </span>
+    )
+  }
   const ok = estado.estado === 'operativo'
   const titulo = ok
     ? `Modelo local ${estado.modelo} disponible`

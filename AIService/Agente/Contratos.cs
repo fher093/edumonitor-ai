@@ -10,7 +10,8 @@ public record MensajeHistorial(string Rol, string Texto);
 public record PeticionChat(
     [Required, StringLength(1000, MinimumLength = 2)] string Mensaje,
     int? CursoId = null,
-    List<MensajeHistorial>? Historial = null);
+    List<MensajeHistorial>? Historial = null,
+    string? Proveedor = null); // "ollama" (por defecto, local) o "gemini" (demostración, más rápido)
 
 public record HechoDto(string Texto, string? Fuente);
 
