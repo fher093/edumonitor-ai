@@ -42,6 +42,7 @@ public sealed class AgenteAcademico(
         var resultados = new List<ResultadoHerramienta>();
 
         var ocultos = new HashSet<ResultadoHerramienta>(ReferenceEqualityComparer.Instance);
+        var soloDelEstudiante = false;
         var plan = _rutaRapida ? PlanRapido(peticion) : null;
         if (plan is not null)
         {
@@ -53,22 +54,26 @@ public sealed class AgenteAcademico(
                 if (resultado.SinAcceso) break; // curso ajeno o inexistente: no se insiste
             }
             if (!resultados.Any(r => r.SinAcceso))
-                await AgregarFichaDelEstudianteAsync(peticion, plan[0].Curso, contexto, resultados, ocultos, ct);
+                soloDelEstudiante = await AgregarFichaDelEstudianteAsync(peticion, plan[0].Curso, contexto, resultados, ocultos, ct);
         }
         else
         {
             await FaseHerramientasAsync(peticion, contexto, resultados, advertencias, ct);
         }
 
-        return await ResponderConDatosAsync(peticion, contexto, resultados, ocultos, advertencias, reloj, ct);
+        return await ResponderConDatosAsync(peticion, contexto, resultados, ocultos, soloDelEstudiante, advertencias, reloj, ct);
     }
 
     /// <summary>
+    /// Devuelve true si la pregunta actual nombra al estudiante: entonces el modelo recibe solo sus datos.
+    /// Si el estudiante viene de una pregunta anterior (un seguimiento), se agrega su ficha pero no se oculta al
+    /// resto del curso, porque la pregunta puede ser sobre otros ("¿quién más tiene bajo rendimiento?").
+    ///
     /// Si la pregunta (o la conversación reciente) nombra a un estudiante del curso, consulta su ficha individual:
     /// así el agente responde con sus notas por actividad y componente, no con datos del grupo. La nómina del curso
     /// se usa para reconocer el nombre; si la pregunta no trata de estudiantes, no se envía al modelo.
     /// </summary>
-    private async Task AgregarFichaDelEstudianteAsync(
+    private async Task<bool> AgregarFichaDelEstudianteAsync(
         PeticionChat peticion, int curso, ContextoConsulta contexto, List<ResultadoHerramienta> resultados,
         HashSet<ResultadoHerramienta> ocultos, CancellationToken ct)
     {
@@ -80,8 +85,9 @@ public sealed class AgenteAcademico(
             nomina = await EjecutarAutomaticaAsync(HerramientasAcademicas.ObtenerCalificaciones, curso, contexto, ct);
             resultados.Add(nomina);
         }
-        if (!nomina.Exito) return;
+        if (!nomina.Exito) return false;
 
+        var enLaPregunta = EstudianteMencionado([peticion.Mensaje], nomina.Contenido) is not null;
         var textos = new List<string> { peticion.Mensaje };
         // Seguimientos cortos ("¿y por cuál empiezo?") heredan el estudiante de las preguntas anteriores; una pregunta
         // sobre el grupo ("¿cuáles son los otros estudiantes?") no, aunque antes se haya hablado de alguien.
@@ -96,8 +102,10 @@ public sealed class AgenteAcademico(
                 HerramientasAcademicas.ObtenerCalificaciones, JsonDocument.Parse(args).RootElement, contexto, ct);
             resultados.Add(ficha with { Origen = "orquestador" });
         }
-        // La nómina completa solo se envía al modelo si la pregunta es sobre los estudiantes en general.
-        if (!preguntaPorEstudiantes || estudiante is not null) ocultos.Add(nomina);
+        // La nómina completa se envía al modelo si la pregunta trata de los estudiantes o si el estudiante se heredó
+        // de la conversación (puede preguntarse por otros); se omite cuando la pregunta nombra a un estudiante.
+        if (enLaPregunta || (!preguntaPorEstudiantes && estudiante is null)) ocultos.Add(nomina);
+        return enLaPregunta;
     }
 
     /// <summary>
@@ -219,7 +227,7 @@ public sealed class AgenteAcademico(
         };
 
     private static readonly Regex Grupo = new(
-        @"\b(otr[oa]s|dem[aá]s|tod[oa]s|estudiantes|alumn[oa]s|grupo|curso|clase|qui[eé]nes|cu[aá]les|resto|compa[nñ]er[oa]s)\b",
+        @"\b(otr[oa]s?|dem[aá]s|tod[oa]s|estudiantes|alumn[oa]s|grupo|curso|clase|qui[eé]nes|qui[eé]n\s+m[aá]s|cu[aá]les|resto|compa[nñ]er[oa]s|alg[uú]n\s+otr[oa])\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     /// <summary>¿La pregunta trata del grupo (y no de un estudiante concreto)?</summary>
@@ -336,7 +344,8 @@ public sealed class AgenteAcademico(
 
     private async Task<RespuestaAgenteDto> ResponderConDatosAsync(
         PeticionChat peticion, ContextoConsulta contexto, List<ResultadoHerramienta> resultados,
-        IReadOnlySet<ResultadoHerramienta> ocultos, List<string> advertencias, Stopwatch reloj, CancellationToken ct)
+        IReadOnlySet<ResultadoHerramienta> ocultos, bool soloDelEstudiante, List<string> advertencias, Stopwatch reloj,
+        CancellationToken ct)
     {
         // Los resultados "ocultos" (p. ej. la nómina usada solo para reconocer un nombre) aparecen en la traza,
         // pero no se envían al modelo.
@@ -348,7 +357,9 @@ public sealed class AgenteAcademico(
             .FirstOrDefault(id => id is not null);
         if (estudianteFicha is { } idEstudiante)
         {
-            exitosos = exitosos.Select(r => r with { Contenido = SoloDelEstudiante(r, idEstudiante) }).ToList();
+            // Solo si la pregunta lo nombra se ocultan los demás; en un seguimiento el modelo ve al grupo y la ficha.
+            if (soloDelEstudiante)
+                exitosos = exitosos.Select(r => r with { Contenido = SoloDelEstudiante(r, idEstudiante) }).ToList();
             exitosos = AgregarRecomendacionDeTutoria(exitosos, idEstudiante);
         }
         var traza = resultados

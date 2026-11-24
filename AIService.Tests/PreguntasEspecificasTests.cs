@@ -161,6 +161,8 @@ public class PreguntasEspecificasTests
     [InlineData("¿cuáles son los otros 4 estudiantes?", true)]
     [InlineData("¿y los demás?", true)]
     [InlineData("¿cómo va el resto del curso?", true)]
+    [InlineData("quien mas tien bajo rendimieno", true)]   // con faltas de ortografía
+    [InlineData("¿algún otro con atrasos?", true)]
     [InlineData("¿y por cuál empiezo?", false)]
     [InlineData("¿qué temas debe tener la tutoría?", false)]
     public void Distingue_preguntas_sobre_el_grupo(string mensaje, bool esperado)
@@ -182,6 +184,22 @@ public class PreguntasEspecificasTests
         var aModelo = modelo.Recibidos[0][1].Contenido;
         Assert.Contains("María Gómez", aModelo);                                          // el modelo ve al grupo
         Assert.Contains("Pedro Castillo", aModelo);
+    }
+
+    [Fact]
+    public async Task En_un_seguimiento_el_modelo_ve_la_ficha_heredada_y_tambien_al_resto_del_curso()
+    {
+        var (agente, modelo, backend) = Crear();
+        modelo.Responde("""{ "respuesta": "Empieza por la Lección 3.", "hechos": [], "inferencias": [], "recomendaciones_ids": [] }""");
+        var historial = new List<MensajeHistorial> { new("docente", "¿Qué temas debe tener la tutoría para Ana Torres?") };
+
+        await agente.ResponderAsync(new PeticionChat("¿y por cuál empiezo?", 1, historial), Contexto, CancellationToken.None);
+
+        Assert.Contains(backend.Llamadas, l => l.Ruta == "api/indicadores/curso/1/estudiantes/11"); // ficha de Ana
+        var aModelo = modelo.Recibidos[0][1].Contenido;
+        Assert.Contains("actividades_mas_bajas", aModelo);  // la ficha llega
+        Assert.Contains("María Gómez", aModelo);            // y el grupo no se oculta
+        Assert.Contains("Preparar una tutoría con Ana Torres", aModelo);
     }
 
     [Fact]
