@@ -161,7 +161,7 @@ function DocumentoInforme({ d }) {
             <thead>
               <tr>
                 <th>Estudiante</th>
-                <th>Regla</th>
+                <th>Tipo de alerta</th>
                 <th>Evidencia</th>
               </tr>
             </thead>
@@ -169,7 +169,7 @@ function DocumentoInforme({ d }) {
               {d.alertas.alertas.map((x, i) => (
                 <tr key={i}>
                   <td className="nowrap">{x.nombre}</td>
-                  <td>{x.regla}</td>
+                  <td>{x.tipoEtiqueta ?? x.regla.split('·').pop().trim()}</td>
                   <td>{x.evidencia}</td>
                 </tr>
               ))}
@@ -199,7 +199,7 @@ function DocumentoInforme({ d }) {
                   </td>
                   <td>{x.accion}</td>
                   <td>
-                    {x.justificacion} <span className="inf-indicador">{x.indicador}</span>
+                    {x.justificacion}
                   </td>
                 </tr>
               ))}

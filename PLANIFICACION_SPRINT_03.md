@@ -213,7 +213,7 @@ La primera evaluación con `qwen2.5-coder:7b` (ver `docs/EVALUACION_AGENTE.md`) 
 | --- | --- |
 | HU-12 | El agente obtiene los cursos y calificaciones del docente solo a través de herramientas que llaman a la API con su JWT. Un curso ajeno devuelve “No tienes acceso a ese curso”. |
 | HU-13 | Con una pregunta general, el agente usa al menos tres herramientas (progreso, alertas y resumen) y la traza lo muestra. |
-| HU-14 | Cada respuesta del chat tiene las secciones Hechos, Inferencias y Recomendaciones (vacías con mensaje si no aplican), con las fuentes y la fecha de corte al pie. |
+| HU-14 | Cada respuesta del chat separa Hechos, Inferencias y Recomendaciones (se muestran las secciones con contenido), con las fuentes y la fecha de corte al pie. *Refinado el 24-nov por experiencia de usuario: las secciones vacías y los datos técnicos (modelo, tiempos, traza) ya no se muestran; ver `DESIGN.md`.* |
 | HU-15 | Cada recomendación indica la acción y el indicador que la justifica (por ejemplo, “logro 52 % < 60 %”). No hay recomendaciones genéricas sin datos. |
 | HU-16 | El informe muestra curso, período, docente, fecha de corte, fuente, métricas, hallazgos, alertas con evidencia y recomendaciones, y se descarga en PDF. |
 | HU-17 | El administrador consulta registros con fecha, usuario, acción, recurso y resultado, filtrables y paginados, incluido el uso de herramientas del agente. Nunca aparecen contraseñas, tokens ni notas. |

@@ -1,17 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/http.js'
 import { useCursoActivo } from '../cursos/CursoContext.jsx'
-import { Panel, Vacio } from '../components/ui.jsx'
+import { Panel } from '../components/ui.jsx'
 import { IconAgente, IconAdvertencia } from '../components/Icons.jsx'
 import { fechaHora } from '../utils/formato.js'
 import { SinCursos } from './Resumen.jsx'
 
+// Pocas y variadas (NN/g recomienda 3-5): muestran lo que el asistente sabe hacer, incluido crear material.
 const SUGERENCIAS = [
   'Resumen del curso',
-  '¿Qué estudiantes necesitan apoyo esta semana?',
+  '¿Quién necesita apoyo esta semana?',
   '¿Qué actividades debo reforzar?',
-  '¿Quién tiene entregas vencidas?',
+  'Crea un deber de 5 preguntas sobre la actividad con más bajo rendimiento',
 ]
+
+// Estados con nombre mientras se espera la respuesta (en lugar de un indicador genérico).
+const ETAPAS_ESPERA = [
+  { desde: 0, texto: 'Revisando las notas y alertas del curso…' },
+  { desde: 2500, texto: 'Redactando la respuesta…' },
+  { desde: 15000, texto: 'Sigue trabajando: el modelo local puede tardar un poco más…' },
+]
+
+const PREFIJO_HERRAMIENTA = /^(listar_cursos_autorizados|obtener_calificaciones|obtener_progreso|identificar_alertas|generar_resumen):/
+
+/**
+ * Avisos que sí le sirven al docente, en lenguaje simple. Los avisos internos del agente (verificación de cifras,
+ * herramientas pedidas automáticamente) quedan en la auditoría y en la API, no en el chat.
+ */
+function avisosParaElDocente(advertencias) {
+  return advertencias.flatMap(a => {
+    if (a.startsWith('Gemini no respondió') || a.startsWith('Gemini no está configurado'))
+      return ['Gemini no estaba disponible: respondió el modelo local.']
+    if (a.startsWith('El modelo no devolvió una respuesta estructurada')) return ['Se muestran los datos del curso sin redactar.']
+    if (PREFIJO_HERRAMIENTA.test(a)) {
+      const [herramienta, ...resto] = a.split(':')
+      return [`No se pudo consultar ${(NOMBRE_HERRAMIENTA[herramienta] ?? herramienta).toLowerCase()}: ${resto.join(':').trim()}`]
+    }
+    return []
+  })
+}
 
 const NOMBRE_HERRAMIENTA = {
   listar_cursos_autorizados: 'Cursos autorizados',
@@ -115,7 +142,7 @@ export default function Agente() {
         className="ag-panel"
         titulo="Asistente académico"
         icono={<IconAgente size={16} />}
-        meta={`${curso} · responde solo con datos de tus herramientas`}
+        meta={`${curso} · responde con los datos de tu curso`}
         acciones={
           <>
             <SelectorModelo
@@ -125,7 +152,7 @@ export default function Agente() {
               geminiDisponible={geminiDisponible}
               deshabilitado={enviando}
             />
-            <EstadoModelo estado={estadoIA} proveedor={proveedorEfectivo} />
+            <AvisoDisponibilidad estado={estadoIA} proveedor={proveedorEfectivo} />
             <button
               type="button"
               className="ws-btn ws-btn-ghost ws-btn-sm"
@@ -140,10 +167,19 @@ export default function Agente() {
       >
         <div className="ag-messages" aria-live="polite">
           {mensajes.length === 0 && (
-            <Vacio titulo="¿En qué te ayudo con este curso?" icono={<IconAgente size={22} />}>
-              Pregunta en lenguaje natural. Cada respuesta separa <strong>hechos</strong> (cifras de tus datos),{' '}
-              <strong>inferencias</strong> y <strong>recomendaciones</strong>, con las fuentes al pie.
-            </Vacio>
+            <div className="ag-bienvenida">
+              <span className="ag-bienvenida-icono">
+                <IconAgente size={20} />
+              </span>
+              <strong>¿En qué te ayudo con {cursoActivo?.nombre ?? 'este curso'}?</strong>
+              <ul>
+                <li>Resumir cómo va el curso y quién necesita apoyo, y por qué.</li>
+                <li>Revisar a un estudiante: sus notas más bajas y qué trabajar en una tutoría.</li>
+                <li>Sugerir qué actividades reforzar con el grupo.</li>
+                <li>Crear material de práctica: deberes, preguntas o ejercicios.</li>
+              </ul>
+              <span className="ag-bienvenida-nota">Usa solo los datos de tus cursos. Escribe con tus palabras o elige una sugerencia.</span>
+            </div>
           )}
 
           {mensajes.map((m, i) =>
@@ -158,11 +194,7 @@ export default function Agente() {
             )
           )}
 
-          {enviando && (
-            <div className="ws-chat-msg ws-chat-bot ag-pensando" role="status">
-              <span className="ws-spinner" /> Consultando las herramientas y redactando la respuesta…
-            </div>
-          )}
+          {enviando && <Esperando />}
           <div ref={finRef} />
         </div>
 
@@ -219,7 +251,7 @@ function SelectorModelo({ valor, onCambio, geminiDisponible, deshabilitado }) {
         disabled={deshabilitado}
         title="Modelo local en este equipo: los datos no salen de la universidad"
       >
-        Local
+        Local · privado
       </button>
       <button
         type="button"
@@ -234,41 +266,44 @@ function SelectorModelo({ valor, onCambio, geminiDisponible, deshabilitado }) {
             : 'Gemini no está configurado (falta GEMINI_API_KEY en el servidor)'
         }
       >
-        Gemini
+        Gemini · rápido
       </button>
     </div>
   )
 }
 
-function EstadoModelo({ estado, proveedor }) {
-  if (!estado) return null
-  if (proveedor === 'gemini') {
-    return (
-      <span className="ws-pill ws-pill-ok" title="Los nombres se seudonimizan antes de enviarse; si Gemini falla, responde el modelo local">
-        <span className="ag-dot is-ok" aria-hidden="true" />
-        {estado.gemini?.modelo} · seudonimizado
-      </span>
-    )
-  }
-  const ok = estado.estado === 'operativo'
-  const titulo = ok
-    ? `Modelo local ${estado.modelo} disponible`
-    : estado.ollamaDisponible
-      ? `Ollama responde, pero falta descargar el modelo ${estado.modelo}`
-      : 'El modelo de lenguaje local no responde'
+/** Solo avisa cuando la opción elegida no está disponible; el nombre técnico del modelo no se muestra. */
+function AvisoDisponibilidad({ estado, proveedor }) {
+  if (!estado || proveedor === 'gemini' || estado.estado === 'operativo') return null
   return (
-    <span className={`ws-pill ${ok ? 'ws-pill-ok' : 'ws-pill-warn'}`} title={titulo}>
-      <span className={`ag-dot ${ok ? 'is-ok' : ''}`} aria-hidden="true" />
-      {ok ? estado.modelo : 'IA no disponible'}
+    <span className="ws-pill ws-pill-warn" title="Abre Ollama en este equipo o elige Gemini">
+      IA local no disponible
     </span>
   )
 }
 
-function Seccion({ etiqueta, clase, vacio, children, cantidad }) {
+function Esperando() {
+  const [ms, setMs] = useState(0)
+  useEffect(() => {
+    const inicio = Date.now()
+    const t = setInterval(() => setMs(Date.now() - inicio), 500)
+    return () => clearInterval(t)
+  }, [])
+  const etapa = [...ETAPAS_ESPERA].reverse().find(e => ms >= e.desde)
+  return (
+    <div className="ws-chat-msg ws-chat-bot ag-pensando" role="status">
+      <span className="ws-spinner" /> {etapa.texto}
+    </div>
+  )
+}
+
+/** Sección de la respuesta; si no tiene contenido no se muestra (menos ruido). */
+function Seccion({ etiqueta, clase, children, cantidad }) {
+  if (cantidad === 0) return null
   return (
     <section>
       <span className={`ws-chat-tag ${clase}`}>{etiqueta}</span>
-      {cantidad === 0 ? <p className="ag-vacio">{vacio}</p> : <ul>{children}</ul>}
+      <ul>{children}</ul>
     </section>
   )
 }
@@ -306,8 +341,6 @@ function Material({ m }) {
 }
 
 function RespuestaAgente({ r }) {
-  const [verTraza, setVerTraza] = useState(false)
-
   if (r.estado !== 'ok') {
     return (
       <div className="ws-chat-msg ws-chat-bot">
@@ -321,7 +354,7 @@ function RespuestaAgente({ r }) {
             ))}
           </ul>
         )}
-        <Pie r={r} verTraza={verTraza} setVerTraza={setVerTraza} />
+        <Pie r={r} />
       </div>
     )
   }
@@ -330,20 +363,17 @@ function RespuestaAgente({ r }) {
     <div className="ws-chat-msg ws-chat-bot">
       {r.respuesta && <p className="ag-respuesta">{r.respuesta}</p>}
       {r.material && <Material m={r.material} />}
-      <Seccion etiqueta="Hechos" clase="ws-chat-tag-fact" cantidad={r.hechos.length} vacio="Sin hechos verificables con los datos actuales.">
+      <Seccion etiqueta="Hechos" clase="ws-chat-tag-fact" cantidad={r.hechos.length}>
         {r.hechos.map((h, i) => (
-          <li key={i}>
-            {h.texto}
-            {h.fuente && <span className="ag-fuente">{NOMBRE_HERRAMIENTA[h.fuente] ?? h.fuente}</span>}
-          </li>
+          <li key={i}>{h.texto}</li>
         ))}
       </Seccion>
-      <Seccion etiqueta="Inferencias" clase="ws-chat-tag-inference" cantidad={r.inferencias.length} vacio="Sin inferencias adicionales.">
+      <Seccion etiqueta="Inferencias" clase="ws-chat-tag-inference" cantidad={r.inferencias.length}>
         {r.inferencias.map((x, i) => (
           <li key={i}>{x}</li>
         ))}
       </Seccion>
-      <Seccion etiqueta="Recomendaciones" clase="ws-chat-tag-reco" cantidad={r.recomendaciones.length} vacio="Sin recomendaciones con los datos actuales.">
+      <Seccion etiqueta="Recomendaciones" clase="ws-chat-tag-reco" cantidad={r.recomendaciones.length}>
         {r.recomendaciones.map((x, i) => (
           <li key={i}>
             <strong>{x.accion}</strong>
@@ -351,54 +381,29 @@ function RespuestaAgente({ r }) {
           </li>
         ))}
       </Seccion>
-      <Pie r={r} verTraza={verTraza} setVerTraza={setVerTraza} />
+      <Pie r={r} />
     </div>
   )
 }
 
-function Pie({ r, verTraza, setVerTraza }) {
+/** Pie: avisos útiles y de dónde salen los datos y a qué fecha (RNF-08). Sin detalles técnicos. */
+function Pie({ r }) {
+  const avisos = avisosParaElDocente(r.advertencias)
+  const fuentes = r.fuentes.map(f => NOMBRE_HERRAMIENTA[f] ?? f)
   return (
     <>
-      {r.advertencias.length > 0 && (
+      {avisos.length > 0 && (
         <ul className="ag-advertencias">
-          {r.advertencias.map((a, i) => (
+          {avisos.map((a, i) => (
             <li key={i}>{a}</li>
           ))}
         </ul>
       )}
-      <footer>
-        {r.fuentes.length > 0 && <>Fuentes: {r.fuentes.map(f => NOMBRE_HERRAMIENTA[f] ?? f).join(' · ')} · </>}
-        {r.fechaCorte && <>corte {fechaHora(r.fechaCorte)} · </>}
-        {r.modelo} · {(r.duracionMs / 1000).toFixed(1)} s ·{' '}
-        <button type="button" className="ag-link" onClick={() => setVerTraza(v => !v)} aria-expanded={verTraza}>
-          {verTraza ? 'ocultar traza' : `ver traza (${r.traza.length})`}
-        </button>
-      </footer>
-      {verTraza && (
-        <table className="ag-traza">
-          <thead>
-            <tr>
-              <th>Herramienta</th>
-              <th>Argumentos</th>
-              <th>Resultado</th>
-              <th>Tiempo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {r.traza.map((t, i) => (
-              <tr key={i}>
-                <td>
-                  <code>{t.herramienta}</code>
-                </td>
-                <td>
-                  <code>{t.argumentos}</code>
-                </td>
-                <td className={t.exito ? 'ag-ok' : 'ag-fallo'}>{t.exito ? `OK (${t.codigoHttp})` : t.error}</td>
-                <td>{t.duracionMs} ms</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {(fuentes.length > 0 || r.fechaCorte) && (
+        <footer>
+          {fuentes.length > 0 && <>Basado en: {fuentes.join(', ').toLowerCase()}</>}
+          {r.fechaCorte && <> · datos al {fechaHora(r.fechaCorte)}</>}
+        </footer>
       )}
     </>
   )

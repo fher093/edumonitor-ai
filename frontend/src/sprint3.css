@@ -64,24 +64,6 @@
   font-weight: 600;
 }
 
-.ag-vacio {
-  margin: 6px 0 0;
-  color: var(--color-ash);
-  font-size: 12.5px;
-}
-
-.ag-fuente {
-  margin-left: 8px;
-  padding: 1px 7px;
-  border-radius: var(--radius-full);
-  background: #fff;
-  border: 1px solid var(--color-bone);
-  font-family: var(--font-sometype-mono);
-  font-size: 10px;
-  color: var(--color-slate);
-  white-space: nowrap;
-}
-
 .ag-justificacion {
   display: block;
   margin-top: 2px;
@@ -98,49 +80,6 @@
   font-size: 12px;
   color: var(--color-carbon);
 }
-
-.ag-link {
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  color: var(--ws-info);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.ag-traza {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11.5px;
-  background: #fff;
-  border: 1px solid var(--color-bone);
-  border-radius: 8px;
-}
-
-.ag-traza th,
-.ag-traza td {
-  padding: 5px 8px;
-  border-bottom: 1px solid var(--color-bone);
-  text-align: left;
-  vertical-align: top;
-}
-
-.ag-traza th {
-  font-family: var(--font-sometype-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-ash);
-}
-
-.ag-traza code {
-  font-size: 11px;
-  word-break: break-all;
-}
-
-.ag-ok { color: var(--ws-ok); }
-.ag-fallo { color: var(--ws-danger); }
 
 .ag-composer {
   border-top: 1px solid var(--color-bone);
@@ -202,19 +141,6 @@
   margin: 0;
   font-size: 11.5px;
   color: var(--color-ash);
-}
-
-.ag-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: var(--ws-amber-dot, #ff9f0a);
-}
-
-.ag-dot.is-ok {
-  background: var(--ws-green-dot, #34c759);
 }
 
 /* ---------- Informe ---------- */
@@ -377,13 +303,6 @@
   border-color: currentColor;
 }
 
-.inf-indicador {
-  display: inline-block;
-  margin-left: 4px;
-  font-family: var(--font-sometype-mono);
-  font-size: 10.5px;
-  color: var(--color-slate);
-}
 
 .inf-foot {
   margin-top: 26px;
@@ -602,4 +521,54 @@
 .ag-selector button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* Bienvenida del asistente: qué puede hacer (NN/g: el primer mensaje indica las capacidades) */
+.ag-bienvenida {
+  align-self: center;
+  max-width: 520px;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--color-bone);
+  color: var(--color-carbon);
+  font-size: 13.5px;
+}
+
+.ag-bienvenida-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--color-mist);
+  color: var(--color-ink-black);
+}
+
+.ag-bienvenida strong {
+  font-size: 15px;
+  color: var(--color-ink-black);
+}
+
+.ag-bienvenida ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ag-bienvenida-nota {
+  font-size: 12px;
+  color: var(--color-ash);
+}
+
+.ag-messages .ws-chat-bot footer {
+  font-family: inherit;
+  font-size: 11.5px;
 }
