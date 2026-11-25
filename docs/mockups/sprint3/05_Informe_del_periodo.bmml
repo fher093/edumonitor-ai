@@ -1,0 +1,559 @@
+<mockup version="1.0" skin="sketch" fontFace="Balsamiq Sans" measuredW="1280" measuredH="1684" mockupW="1280" mockupH="1684">
+  <controls>
+    <control controlID="0" controlTypeID="com.balsamiq.mockups::BrowserWindow" x="0" y="0" w="1280" h="1684" measuredW="1280" measuredH="1684" zOrder="0" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>EduMonitor%20AI%0Ahttp%3A//localhost%3A3000/informe</text>
+        <verticalScrollbar>false</verticalScrollbar>
+      </controlProperties>
+    </control>
+    <control controlID="1" controlTypeID="com.balsamiq.mockups::Canvas" x="1" y="72" w="232" h="1611" measuredW="232" measuredH="1611" zOrder="1" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="2" controlTypeID="com.balsamiq.mockups::Canvas" x="18" y="90" w="26" h="26" measuredW="26" measuredH="26" zOrder="2" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="3" controlTypeID="com.balsamiq.mockups::Label" x="52" y="86" w="150" h="20" measuredW="150" measuredH="20" zOrder="3" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>EduMonitor%20AI</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="4" controlTypeID="com.balsamiq.mockups::Label" x="52" y="104" w="150" h="20" measuredW="150" measuredH="20" zOrder="4" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>UTA%20%B7%20Docente</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="5" controlTypeID="com.balsamiq.mockups::Button" x="196" y="90" w="26" h="28" measuredW="26" measuredH="28" zOrder="5" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u2261</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="6" controlTypeID="com.balsamiq.mockups::ComboBox" x="14" y="138" w="204" h="34" measuredW="204" measuredH="34" zOrder="6" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Metodolog%EDas%20%C1giles%20%28SW-401%29%20%B7%202026-B</text>
+        <size>11</size>
+      </controlProperties>
+    </control>
+    <control controlID="7" controlTypeID="com.balsamiq.mockups::Label" x="22" y="190" w="180" h="20" measuredW="180" measuredH="20" zOrder="7" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>CURSO</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="8" controlTypeID="com.balsamiq.mockups::Label" x="24" y="216" w="16" h="20" measuredW="16" measuredH="20" zOrder="8" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="9" controlTypeID="com.balsamiq.mockups::Label" x="46" y="216" w="150" h="20" measuredW="150" measuredH="20" zOrder="9" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Resumen</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="10" controlTypeID="com.balsamiq.mockups::Label" x="24" y="248" w="16" h="20" measuredW="16" measuredH="20" zOrder="10" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="11" controlTypeID="com.balsamiq.mockups::Label" x="46" y="248" w="150" h="20" measuredW="150" measuredH="20" zOrder="11" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Estudiantes</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="12" controlTypeID="com.balsamiq.mockups::Label" x="24" y="280" w="16" h="20" measuredW="16" measuredH="20" zOrder="12" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="13" controlTypeID="com.balsamiq.mockups::Label" x="46" y="280" w="150" h="20" measuredW="150" measuredH="20" zOrder="13" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Actividades</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="14" controlTypeID="com.balsamiq.mockups::Label" x="24" y="312" w="16" h="20" measuredW="16" measuredH="20" zOrder="14" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="15" controlTypeID="com.balsamiq.mockups::Label" x="46" y="312" w="150" h="20" measuredW="150" measuredH="20" zOrder="15" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Alertas</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="16" controlTypeID="com.balsamiq.mockups::Label" x="186" y="313" w="26" h="20" measuredW="26" measuredH="20" zOrder="16" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>3</text>
+        <size>10</size>
+        <bold>true</bold>
+        <align>center</align>
+      </controlProperties>
+    </control>
+    <control controlID="17" controlTypeID="com.balsamiq.mockups::Label" x="24" y="344" w="16" h="20" measuredW="16" measuredH="20" zOrder="17" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="18" controlTypeID="com.balsamiq.mockups::Label" x="46" y="344" w="150" h="20" measuredW="150" measuredH="20" zOrder="18" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>An%E1lisis%20grupal</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="19" controlTypeID="com.balsamiq.mockups::Label" x="22" y="388" w="180" h="20" measuredW="180" measuredH="20" zOrder="19" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>ASISTENCIA%20IA</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="20" controlTypeID="com.balsamiq.mockups::Label" x="24" y="414" w="16" h="20" measuredW="16" measuredH="20" zOrder="20" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="21" controlTypeID="com.balsamiq.mockups::Label" x="46" y="414" w="150" h="20" measuredW="150" measuredH="20" zOrder="21" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Asistente</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="22" controlTypeID="com.balsamiq.mockups::Canvas" x="12" y="441" w="208" h="30" measuredW="208" measuredH="30" zOrder="22" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="23" controlTypeID="com.balsamiq.mockups::Label" x="24" y="446" w="16" h="20" measuredW="16" measuredH="20" zOrder="23" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="24" controlTypeID="com.balsamiq.mockups::Label" x="46" y="446" w="150" h="20" measuredW="150" measuredH="20" zOrder="24" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Informe</text>
+        <size>13</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="25" controlTypeID="com.balsamiq.mockups::Label" x="22" y="490" w="180" h="20" measuredW="180" measuredH="20" zOrder="25" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>GENERAL</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="26" controlTypeID="com.balsamiq.mockups::Label" x="24" y="516" w="16" h="20" measuredW="16" measuredH="20" zOrder="26" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u25AA</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="27" controlTypeID="com.balsamiq.mockups::Label" x="46" y="516" w="150" h="20" measuredW="150" measuredH="20" zOrder="27" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Mis%20cursos</text>
+        <size>13</size>
+        <bold>false</bold>
+      </controlProperties>
+    </control>
+    <control controlID="28" controlTypeID="com.balsamiq.mockups::HRule" x="14" y="1610" w="204" h="10" measuredW="204" measuredH="10" zOrder="28" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="29" controlTypeID="com.balsamiq.mockups::Canvas" x="16" y="1624" w="32" h="32" measuredW="32" measuredH="32" zOrder="29" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="30" controlTypeID="com.balsamiq.mockups::Label" x="16" y="1630" w="32" h="20" measuredW="32" measuredH="20" zOrder="30" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>DP</text>
+        <size>11</size>
+        <bold>true</bold>
+        <align>center</align>
+      </controlProperties>
+    </control>
+    <control controlID="31" controlTypeID="com.balsamiq.mockups::Label" x="56" y="1622" w="130" h="20" measuredW="130" measuredH="20" zOrder="31" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Docente%20de%20prueba</text>
+        <size>12</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="32" controlTypeID="com.balsamiq.mockups::Label" x="56" y="1640" w="130" h="20" measuredW="130" measuredH="20" zOrder="32" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Docente</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="33" controlTypeID="com.balsamiq.mockups::Button" x="196" y="1626" w="26" h="28" measuredW="26" measuredH="28" zOrder="33" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u23FB</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="34" controlTypeID="com.balsamiq.mockups::Label" x="256" y="136" w="300" h="20" measuredW="300" measuredH="20" zOrder="34" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>INFORME%20DEL%20PER%CDODO</text>
+        <size>11</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="35" controlTypeID="com.balsamiq.mockups::Label" x="256" y="154" w="600" h="30" measuredW="600" measuredH="30" zOrder="35" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Metodolog%EDas%20%C1giles%20%28SW-401%29</text>
+        <size>22</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="36" controlTypeID="com.balsamiq.mockups::Label" x="256" y="188" w="760" h="20" measuredW="760" measuredH="20" zOrder="36" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>M%E9tricas%2C%20hallazgos%2C%20alertas%20y%20recomendaciones%20con%20fecha%20de%20corte.%20Mismos%20c%E1lculos%20que%20el%20resumen%20y%20las%20alertas.</text>
+        <size>12</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="37" controlTypeID="com.balsamiq.mockups::Button" x="1106" y="152" w="150" h="32" measuredW="150" measuredH="32" zOrder="37" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Descargar%20PDF%20%20%u2913</text>
+        <size>12</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="38" controlTypeID="com.balsamiq.mockups::Canvas" x="256" y="226" w="1000" h="1434" measuredW="1000" measuredH="1434" zOrder="38" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="39" controlTypeID="com.balsamiq.mockups::Label" x="288" y="252" w="500" h="20" measuredW="500" measuredH="20" zOrder="39" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>EDUMONITOR%20AI%20%B7%20UNIVERSIDAD%20T%C9CNICA%20DE%20AMBATO</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="40" controlTypeID="com.balsamiq.mockups::Label" x="288" y="270" w="600" h="28" measuredW="600" measuredH="28" zOrder="40" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Informe%20de%20seguimiento%20acad%E9mico</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="41" controlTypeID="com.balsamiq.mockups::Label" x="288" y="302" w="600" h="20" measuredW="600" measuredH="20" zOrder="41" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Metodolog%EDas%20%C1giles%20%28SW-401%29%20%B7%20Paralelo%20A%20%B7%20Per%EDodo%202026-B</text>
+        <size>13</size>
+      </controlProperties>
+    </control>
+    <control controlID="42" controlTypeID="com.balsamiq.mockups::Label" x="924" y="250" w="300" h="20" measuredW="300" measuredH="20" zOrder="42" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Docente</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="43" controlTypeID="com.balsamiq.mockups::Label" x="924" y="264" w="300" h="20" measuredW="300" measuredH="20" zOrder="43" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Docente%20de%20prueba</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="44" controlTypeID="com.balsamiq.mockups::Label" x="924" y="284" w="300" h="20" measuredW="300" measuredH="20" zOrder="44" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Fecha%20de%20corte</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="45" controlTypeID="com.balsamiq.mockups::Label" x="924" y="298" w="300" h="20" measuredW="300" measuredH="20" zOrder="45" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>25/11/2026%2016%3A20</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="46" controlTypeID="com.balsamiq.mockups::Label" x="924" y="318" w="300" h="20" measuredW="300" measuredH="20" zOrder="46" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Fuente%20de%20los%20datos</text>
+        <size>10</size>
+        <bold>true</bold>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="47" controlTypeID="com.balsamiq.mockups::Label" x="924" y="332" w="300" h="20" measuredW="300" measuredH="20" zOrder="47" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Moodle%20%B7%20sincronizado%2025/11/2026%2016%3A05</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="48" controlTypeID="com.balsamiq.mockups::HRule" x="288" y="354" w="936" h="10" measuredW="936" measuredH="10" zOrder="48" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="49" controlTypeID="com.balsamiq.mockups::Label" x="288" y="376" w="300" h="20" measuredW="300" measuredH="20" zOrder="49" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>1.%20M%E9tricas</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="50" controlTypeID="com.balsamiq.mockups::Canvas" x="288" y="408" w="177.6" h="86" measuredW="177.6" measuredH="86" zOrder="50" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="51" controlTypeID="com.balsamiq.mockups::Label" x="300" y="418" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="51" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Promedio%20del%20curso</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="52" controlTypeID="com.balsamiq.mockups::Label" x="300" y="438" w="153.6" h="28" measuredW="153.6" measuredH="28" zOrder="52" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>13%2C4%20/%2020</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="53" controlTypeID="com.balsamiq.mockups::Label" x="300" y="468" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="53" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u03C3%203%2C1</text>
+        <size>10</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="54" controlTypeID="com.balsamiq.mockups::Canvas" x="477.6" y="408" w="177.6" h="86" measuredW="177.6" measuredH="86" zOrder="54" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="55" controlTypeID="com.balsamiq.mockups::Label" x="489.6" y="418" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="55" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Aprobados%20proyectados</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="56" controlTypeID="com.balsamiq.mockups::Label" x="489.6" y="438" w="153.6" h="28" measuredW="153.6" measuredH="28" zOrder="56" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>6%20de%208</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="57" controlTypeID="com.balsamiq.mockups::Label" x="489.6" y="468" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="57" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>nota%20final%20%u2265%2014/20</text>
+        <size>10</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="58" controlTypeID="com.balsamiq.mockups::Canvas" x="667.2" y="408" w="177.6" h="86" measuredW="177.6" measuredH="86" zOrder="58" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="59" controlTypeID="com.balsamiq.mockups::Label" x="679.2" y="418" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="59" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Requieren%20atenci%F3n</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="60" controlTypeID="com.balsamiq.mockups::Label" x="679.2" y="438" w="153.6" h="28" measuredW="153.6" measuredH="28" zOrder="60" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>3</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="61" controlTypeID="com.balsamiq.mockups::Label" x="679.2" y="468" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="61" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>con%20al%20menos%20una%20alerta</text>
+        <size>10</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="62" controlTypeID="com.balsamiq.mockups::Canvas" x="856.8" y="408" w="177.6" h="86" measuredW="177.6" measuredH="86" zOrder="62" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="63" controlTypeID="com.balsamiq.mockups::Label" x="868.8" y="418" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="63" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Actividades%20evaluadas</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="64" controlTypeID="com.balsamiq.mockups::Label" x="868.8" y="438" w="153.6" h="28" measuredW="153.6" measuredH="28" zOrder="64" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>7%20de%208</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="65" controlTypeID="com.balsamiq.mockups::Canvas" x="1046.4" y="408" w="177.6" h="86" measuredW="177.6" measuredH="86" zOrder="65" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="66" controlTypeID="com.balsamiq.mockups::Label" x="1058.4" y="418" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="66" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Finalizaci%F3n%20%28vencidas%29</text>
+        <size>11</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="67" controlTypeID="com.balsamiq.mockups::Label" x="1058.4" y="438" w="153.6" h="28" measuredW="153.6" measuredH="28" zOrder="67" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>78%20%25</text>
+        <size>20</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="68" controlTypeID="com.balsamiq.mockups::Label" x="1058.4" y="468" w="153.6" h="20" measuredW="153.6" measuredH="20" zOrder="68" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>4%20entregas%20sin%20realizar</text>
+        <size>10</size>
+        <color>6710886</color>
+      </controlProperties>
+    </control>
+    <control controlID="69" controlTypeID="com.balsamiq.mockups::DataGrid" x="288" y="512" w="520" h="150" measuredW="520" measuredH="150" zOrder="69" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Rango%20de%20promedio%2CEstudiantes%2C%25%0A0%20%u2013%2040%20%25%2C1%2C12%5C%2C5%20%25%0A40%20%u2013%2060%20%25%2C1%2C12%5C%2C5%20%25%0A60%20%u2013%2080%20%25%2C3%2C37%5C%2C5%20%25%0A80%20%u2013%20100%20%25%2C3%2C37%5C%2C5%20%25</text>
+        <hasHeader>true</hasHeader>
+        <rowHeight>28</rowHeight>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="70" controlTypeID="com.balsamiq.mockups::Label" x="288" y="686" w="300" h="20" measuredW="300" measuredH="20" zOrder="70" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>2.%20Hallazgos</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="71" controlTypeID="com.balsamiq.mockups::Paragraph" x="288" y="716" w="936" h="46" measuredW="936" measuredH="46" zOrder="71" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u2022%20La%20Lecci%F3n%203%20tiene%20un%20logro%20del%2052%20%25%20%28bajo%20el%20umbral%20del%2060%20%25%29.%0A%u2022%20Tendencia%20del%20grupo%3A%20descenso%20entre%20el%20parcial%201%20y%20el%20parcial%202.</text>
+        <size>13</size>
+      </controlProperties>
+    </control>
+    <control controlID="72" controlTypeID="com.balsamiq.mockups::DataGrid" x="288" y="772" w="936" h="86" measuredW="936" measuredH="86" zOrder="72" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Actividad%20con%20logro%20bajo%20el%2060%20%25%2CParcial%2CLogro%2CCalificados%0ALecci%F3n%203%20%u2014%20Scrum%20y%20sus%20eventos%2CParcial%202%2C52%20%25%2C7%0ATaller%204%20%u2014%20Historias%20de%20usuario%2CParcial%202%2C58%20%25%2C8</text>
+        <hasHeader>true</hasHeader>
+        <rowHeight>28</rowHeight>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="73" controlTypeID="com.balsamiq.mockups::Label" x="288" y="882" w="400" h="20" measuredW="400" measuredH="20" zOrder="73" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>3.%20Alertas%20%28se%F1ales%20de%20seguimiento%29</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="74" controlTypeID="com.balsamiq.mockups::DataGrid" x="288" y="912" w="936" h="114" measuredW="936" measuredH="114" zOrder="74" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Estudiante%2CTipo%20de%20alerta%2CEvidencia%0AMar%EDa%20G%F3mez%2CDescenso%20de%20rendimiento%2C8%5C%2C0%20%u2192%204%5C%2C2%20/10%20en%20las%20%FAltimas%203%20actividades%20%28%u0394%203%5C%2C8%20%3E%201%5C%2C0%29%0APedro%20Castillo%2CEntregas%20atrasadas%2C2%20actividades%20vencidas%20sin%20entrega%0AAna%20Ruiz%2CPromedio%20bajo%2CPromedio%2011%5C%2C8/20%20por%20debajo%20de%2014/20</text>
+        <hasHeader>true</hasHeader>
+        <rowHeight>28</rowHeight>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="75" controlTypeID="com.balsamiq.mockups::Label" x="288" y="1050" w="300" h="20" measuredW="300" measuredH="20" zOrder="75" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>4.%20Recomendaciones</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="76" controlTypeID="com.balsamiq.mockups::DataGrid" x="288" y="1080" w="936" h="114" measuredW="936" measuredH="114" zOrder="76" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Prioridad%2CAcci%F3n%20sugerida%2CJustificaci%F3n%0AAlta%2CContactar%20a%20Pedro%20Castillo%20antes%20del%20cierre%20del%20parcial%202%2C2%20actividades%20vencidas%20sin%20entrega%0AAlta%2CTutor%EDa%20con%20Mar%EDa%20G%F3mez%20sobre%20la%20Lecci%F3n%203%2CDescenso%20de%208%5C%2C0%20a%204%5C%2C2/10%20en%20las%20%FAltimas%203%20actividades%0AMedia%2CTutor%EDa%20grupal%20sobre%20los%20temas%20de%20la%20Lecci%F3n%203%2CLogro%20del%2052%20%25%3B%20umbral%20del%2060%20%25</text>
+        <hasHeader>true</hasHeader>
+        <rowHeight>28</rowHeight>
+        <size>12</size>
+      </controlProperties>
+    </control>
+    <control controlID="77" controlTypeID="com.balsamiq.mockups::Label" x="288" y="1218" w="400" h="20" measuredW="400" measuredH="20" zOrder="77" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Advertencias%20sobre%20los%20datos</text>
+        <size>15</size>
+        <bold>true</bold>
+      </controlProperties>
+    </control>
+    <control controlID="78" controlTypeID="com.balsamiq.mockups::Paragraph" x="288" y="1246" w="936" h="22" measuredW="936" measuredH="22" zOrder="78" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>%u2022%20Datos%20insuficientes%3A%20el%20Proyecto%20final%20a%FAn%20no%20tiene%20calificaciones.</text>
+        <size>13</size>
+      </controlProperties>
+    </control>
+    <control controlID="79" controlTypeID="com.balsamiq.mockups::HRule" x="288" y="1286" w="936" h="10" measuredW="936" measuredH="10" zOrder="79" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="80" controlTypeID="com.balsamiq.mockups::Paragraph" x="288" y="1300" w="936" h="40" measuredW="936" measuredH="40" zOrder="80" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Generado%20por%20EduMonitor%20AI%20el%2025/11/2026%2016%3A20.%20Las%20cifras%20se%20calculan%20de%20forma%20determinista%20a%20partir%20de%20los%20datos%20sincronizados%3B%20las%20alertas%20son%20se%F1ales%20de%20seguimiento%2C%20no%20diagn%F3sticos.%20No%20sustituye%20el%20criterio%20del%20docente.</text>
+        <size>11</size>
+        <color>6710886</color>
+        <italic>true</italic>
+      </controlProperties>
+    </control>
+    <control controlID="81" controlTypeID="com.balsamiq.mockups::HRule" x="233" y="110" w="1046" h="10" measuredW="1046" measuredH="10" zOrder="81" locked="false" isInGroup="-1">
+      <controlProperties>
+
+      </controlProperties>
+    </control>
+    <control controlID="82" controlTypeID="com.balsamiq.mockups::Label" x="254" y="84" w="520" h="20" measuredW="520" measuredH="20" zOrder="82" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>EduMonitor%20AI%20%20/%20%20Informe</text>
+        <size>12</size>
+      </controlProperties>
+    </control>
+  </controls>
+</mockup>

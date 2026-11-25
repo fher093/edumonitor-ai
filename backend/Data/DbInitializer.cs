@@ -171,6 +171,28 @@ BEGIN
     );
     CREATE INDEX IX_SincronizacionesMoodle_Fecha ON dbo.SincronizacionesMoodle (FechaInicio);
 END;
+
+IF OBJECT_ID(N'dbo.RegistrosAuditoria', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RegistrosAuditoria (
+        Id            BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_RegistrosAuditoria PRIMARY KEY,
+        Fecha         DATETIME2      NOT NULL,
+        UsuarioId     INT            NULL,
+        UsuarioCorreo NVARCHAR(254)  NULL,
+        Rol           NVARCHAR(40)   NULL,
+        Categoria     NVARCHAR(20)   NOT NULL,
+        Accion        NVARCHAR(80)   NOT NULL,
+        Recurso       NVARCHAR(200)  NULL,
+        Detalle       NVARCHAR(500)  NULL,
+        Resultado     NVARCHAR(20)   NOT NULL,
+        CodigoHttp    INT            NULL,
+        Ip            NVARCHAR(45)   NULL,
+        CONSTRAINT CK_RegistrosAuditoria_Categoria
+            CHECK (Categoria IN (N'acceso', N'consulta', N'cambio', N'agente'))
+    );
+    CREATE INDEX IX_RegistrosAuditoria_Fecha ON dbo.RegistrosAuditoria (Fecha);
+    CREATE INDEX IX_RegistrosAuditoria_Categoria_Fecha ON dbo.RegistrosAuditoria (Categoria, Fecha);
+END;
 ", ct);
                     // Índices sobre columnas recién agregadas (lote aparte para que SQL Server las reconozca).
                     await db.Database.ExecuteSqlRawAsync(@"

@@ -12,6 +12,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/alertas")]
 [Authorize(Roles = $"{RolNombres.Docente},{RolNombres.AdministradorTecnico}")]
+[Auditar]
 public class AlertasController(
     AppDbContext db,
     AnaliticaProvider analitica,
@@ -53,6 +54,7 @@ public class AlertasController(
     /// </summary>
     [HttpPut("reglas/{id:int}")]
     [Authorize(Roles = RolNombres.AdministradorTecnico)]
+    [Auditar(CategoriasAuditoria.Cambio, Accion = "regla.editar")]
     [ProducesResponseType<ReglaAlertaDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -70,6 +72,8 @@ public class AlertasController(
         regla.Activa = request.Activa;
         regla.FechaActualizacion = DateTime.UtcNow;
         await Db.SaveChangesAsync(ct);
+        AuditarAttribute.AgregarDetalle(HttpContext,
+            $"regla={regla.Tipo}; activa={regla.Activa.ToString().ToLowerInvariant()}; parametros={regla.ParametrosJson}");
 
         return Ok(new ReglaAlertaDto(
             regla.Id, regla.Tipo, regla.Nombre, regla.ParametrosJson, regla.Activa,

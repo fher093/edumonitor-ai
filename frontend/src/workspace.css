@@ -1984,64 +1984,6 @@
   margin-top: auto;
 }
 
-/* Vista previa de IA (Sprint 3) */
-.ws-preview {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.ws-preview-frame {
-  position: relative;
-  border-radius: 18px;
-  padding: 2px;
-  background: var(--ws-conic);
-}
-
-.ws-preview-frame > * {
-  background: #fff;
-}
-
-.ws-preview-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 16px 16px 0 0;
-  border-bottom: 1px solid var(--color-bone);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-slate);
-}
-
-.ws-preview-sample {
-  margin-left: auto;
-  font-family: var(--font-sometype-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ws-warn);
-}
-
-.ws-preview-notes {
-  padding: 18px;
-  background: #fff;
-  border: 1px solid var(--color-bone);
-  border-radius: var(--radius-cards);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ws-chat,
-.ws-report {
-  border-radius: 0 0 16px 16px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
 .ws-chat-msg {
   max-width: 88%;
@@ -2109,38 +2051,6 @@
   color: var(--color-slate);
 }
 
-.ws-chat-input {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 6px 6px 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-bone);
-  font-size: 13px;
-  color: var(--color-ash);
-}
-
-.ws-report header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-bone);
-}
-
-.ws-report h3 {
-  margin: 0 0 4px;
-  font-family: var(--font-plus-jakarta-sans);
-  font-size: 13.5px;
-  font-weight: 800;
-}
-
-.ws-report p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--color-carbon);
-}
-
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
   .ws-kpis {
@@ -2189,8 +2099,7 @@
     min-height: 480px;
   }
 
-  .ws-grid-analisis,
-  .ws-preview {
+  .ws-grid-analisis {
     grid-template-columns: 1fr;
   }
 
@@ -2273,7 +2182,6 @@
 .ws-table td.ws-right {
   text-align: right;
 }
-
 
 .ws-columns {
   height: 100%;

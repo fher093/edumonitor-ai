@@ -15,6 +15,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api/actividades/{actividadId:int}/calificaciones")]
 [Authorize(Roles = RolNombres.Docente)]
+[Auditar]
 public class CalificacionesController(AppDbContext db, AnaliticaProvider analitica)
     : ControladorAcademicoBase(db, analitica)
 {

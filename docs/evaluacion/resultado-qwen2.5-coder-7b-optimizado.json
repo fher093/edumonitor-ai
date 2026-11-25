@@ -1,0 +1,341 @@
+{
+  "fecha": "2026-11-23T22:15:03.389Z",
+  "modelo": "qwen2.5-coder:7b",
+  "cursoId": 1,
+  "resultados": [
+    {
+      "id": "E1",
+      "tipo": "escenario",
+      "pregunta": "Dame un resumen del curso",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 35.457,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "El curso tiene un total de 8 estudiantes matriculados.",
+            "fuente": "obtener_progreso"
+          },
+          {
+            "texto": "La actividad con menor rendimiento es «Taller 1: Práctica guiada» (59.4 % de logro).",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "El promedio del componente práctico-experimental del parcial 1 es 5.94/10.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "5 estudiantes requieren atención según las reglas de alerta configuradas.",
+            "fuente": "identificar_alertas"
+          }
+        ],
+        "inferencias": [
+          "El curso ha mantenido una tendencia estable, pero hay áreas que necesitan mejora.",
+          "La actividad «Taller 1: Práctica guiada» es un punto débil para el curso."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Reforzar el componente de aprendizaje práctico-experimental (30 %) del parcial 1 con actividades de práctica guiada.",
+            "justificacion": "El promedio del componente es 5.94/10 en 8 calificación(es), por debajo de 6/10."
+          },
+          {
+            "accion": "Retroalimentar al grupo los contenidos de «Taller 1: Práctica guiada» (parcial 1) antes de la siguiente evaluación.",
+            "justificacion": "El logro promedio fue 59.4 % con 8 estudiante(s) calificados, por debajo del umbral del 60 %. "
+          }
+        ],
+        "fuentes": [
+          "generar_resumen",
+          "identificar_alertas",
+          "obtener_progreso"
+        ],
+        "fechaCorte": "2026-11-23T22:13:42.4665502Z",
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 138,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 24,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 31,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_calificaciones",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 34,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "618230b5c9f3",
+        "duracionMs": 35446,
+        "respuesta": "El curso Metodologías Ágiles (SW-401) para el periodo 2026-B ha tenido un rendimiento estable, con un promedio de 12.60 sobre 20. El 76.56% de los estudiantes han completado las actividades asignadas hasta ahora."
+      },
+      "herramientas": [
+        "generar_resumen",
+        "identificar_alertas",
+        "obtener_progreso",
+        "obtener_calificaciones"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "E2",
+      "tipo": "escenario",
+      "pregunta": "¿Qué estudiantes necesitan apoyo esta semana?",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 25.012,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "5 estudiantes requieren atención según las reglas de alerta configuradas.",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 3.7 sobre 10, cuando antes tenía 7.0.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "No entregó 3 actividades que ya vencieron: Lección 2, Lección 3 y Tarea 3.",
+            "fuente": "identificar_alertas"
+          },
+          {
+            "texto": "Solo completó 4 de las 8 actividades que ya vencieron (50 %). Se espera al menos el 60 %.",
+            "fuente": "identificar_alertas"
+          }
+        ],
+        "inferencias": [
+          "Ana Torres, Carlos López y Pedro Castillo están experimentando una disminución significativa en sus calificaciones.",
+          "Estos estudiantes no han entregado todas las actividades programadas, lo que indica un retraso en su proceso de aprendizaje."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Contactar a Ana Torres para acordar un plan de entrega de las actividades pendientes. Revisar además la baja en sus notas.",
+            "justificacion": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 3.7 sobre 10, cuando antes tenía 7.0. Se avisa cuando la baja supera 1 punto. No entregó 3 actividades que ya vencieron: Lección 2, Lección 3 y Tarea 3."
+          },
+          {
+            "accion": "Contactar a Carlos López para acordar un plan de entrega de las actividades pendientes. Revisar además la baja en sus notas.",
+            "justificacion": "Sus notas bajaron: en las últimas 3 evaluaciones promedia 4.0 sobre 10, cuando antes tenía 6.0. Se avisa cuando la baja supera 1 punto. No entregó 4 actividades que ya vencieron: Lección 3, Taller 2, Tarea 2 y Tarea 3. Solo completó 4 de las 8 actividades que ya vencieron (50 %). Se espera al menos el 60 %."
+          },
+          {
+            "accion": "Contactar a Pedro Castillo para acordar un plan de entrega de las actividades pendientes.",
+            "justificacion": "No entregó 3 actividades que ya vencieron: Tarea 1, Taller 2 y Tarea 3."
+          }
+        ],
+        "fuentes": [
+          "generar_resumen",
+          "identificar_alertas",
+          "obtener_progreso",
+          "obtener_calificaciones"
+        ],
+        "fechaCorte": "2026-11-23T22:14:17.8227803Z",
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 41,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 12,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 13,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_calificaciones",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 14,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "319f0b84149b",
+        "duracionMs": 25000,
+        "respuesta": "Ana Torres, Carlos López y Pedro Castillo necesitan apoyo esta semana."
+      },
+      "herramientas": [
+        "generar_resumen",
+        "identificar_alertas",
+        "obtener_progreso",
+        "obtener_calificaciones"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "E3",
+      "tipo": "escenario",
+      "pregunta": "¿Qué actividades debo reforzar con el grupo?",
+      "esperado": "ok",
+      "http": 200,
+      "segundos": 20.613,
+      "respuesta": {
+        "estado": "ok",
+        "mensaje": null,
+        "hechos": [
+          {
+            "texto": "La actividad con menor rendimiento es «Taller 1: Práctica guiada» (59.4 % de logro).",
+            "fuente": "generar_resumen"
+          },
+          {
+            "texto": "El promedio del componente de aprendizaje práctico-experimental (30 %) del parcial 1 es 5.94/10 en 8 calificación(es), por debajo de 6/10.",
+            "fuente": "generar_resumen"
+          }
+        ],
+        "inferencias": [
+          "El Taller 1: Práctica guiada necesita mayor atención ya que su rendimiento es significativamente inferior al esperado.",
+          "El componente práctico-experimental del parcial 1 también requiere reforzamiento para mejorar los resultados."
+        ],
+        "recomendaciones": [
+          {
+            "accion": "Retroalimentar al grupo los contenidos de «Taller 1: Práctica guiada» (parcial 1) antes de la siguiente evaluación.",
+            "justificacion": "El logro promedio fue 59.4 % con 8 estudiante(s) calificados, por debajo del umbral del 60 %."
+          },
+          {
+            "accion": "Reforzar el componente de aprendizaje práctico-experimental (30 %) del parcial 1 con actividades de práctica guiada.",
+            "justificacion": "El promedio del componente es 5.94/10 en 8 calificación(es), por debajo de 6/10."
+          }
+        ],
+        "fuentes": [
+          "generar_resumen",
+          "identificar_alertas",
+          "obtener_progreso"
+        ],
+        "fechaCorte": "2026-11-23T22:14:42.8238071Z",
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 47,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "identificar_alertas",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 13,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_progreso",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 11,
+            "error": null,
+            "origen": "orquestador"
+          },
+          {
+            "herramienta": "obtener_calificaciones",
+            "argumentos": "{\"curso_id\":1}",
+            "exito": true,
+            "codigoHttp": 200,
+            "duracionMs": 11,
+            "error": null,
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "edd3ec188812",
+        "duracionMs": 20603,
+        "respuesta": "Deberías reforzar el Taller 1: Práctica guiada y el componente de aprendizaje práctico-experimental del parcial 1."
+      },
+      "herramientas": [
+        "generar_resumen",
+        "identificar_alertas",
+        "obtener_progreso",
+        "obtener_calificaciones"
+      ],
+      "cumple": true
+    },
+    {
+      "id": "F1",
+      "tipo": "fallo",
+      "pregunta": "Muéstrame las alertas del curso con id 9999",
+      "esperado": "sin_acceso",
+      "http": 200,
+      "segundos": 0.027,
+      "respuesta": {
+        "estado": "sin_acceso",
+        "mensaje": "No se encontró el curso o el estudiante indicado entre tus cursos autorizados.",
+        "hechos": [],
+        "inferencias": [],
+        "recomendaciones": [],
+        "fuentes": [],
+        "fechaCorte": null,
+        "advertencias": [],
+        "traza": [
+          {
+            "herramienta": "generar_resumen",
+            "argumentos": "{\"curso_id\":9999}",
+            "exito": false,
+            "codigoHttp": 404,
+            "duracionMs": 12,
+            "error": "No se encontró el curso o el estudiante indicado entre tus cursos autorizados.",
+            "origen": "orquestador"
+          }
+        ],
+        "modelo": "qwen2.5-coder:7b",
+        "consultaId": "c9b4dc84f878",
+        "duracionMs": 13,
+        "respuesta": null
+      },
+      "herramientas": [
+        "generar_resumen"
+      ],
+      "cumple": true
+    }
+  ]
+}

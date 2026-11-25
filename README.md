@@ -5,11 +5,11 @@ Sistema inteligente de seguimiento del rendimiento académico integrado con Mood
 ## Estructura
 
 - `backend/`    → API ASP.NET Core (autenticación, cursos, actividades, indicadores, alertas)
-- `AIService/`  → Microservicio del agente de IA (.NET + Ollama)
+- `AIService/`  → Microservicio del agente académico de IA (.NET + Ollama local): herramientas, orquestador y verificación de respuestas
 - `MoodleService/` → Microservicio de integración con Moodle: conexión segura (RF-02) y extracción de datos (RF-03)
 - `moodle/`     → Script que prepara el Moodle local de demostración (servicio web, token y cursos)
 - `frontend/`   → React + Vite
-- `backend.Tests/`, `MoodleService.Tests/` → Pruebas unitarias y de integración (xUnit)
+- `backend.Tests/`, `AIService.Tests/`, `MoodleService.Tests/` → Pruebas unitarias y de integración (xUnit)
 - `docs/`       → Documentación, contratos OpenAPI y scripts SQL
 
 > **Fuente de datos:** los cursos, matriculados, actividades y notas vienen de **Moodle** y se sincronizan
@@ -33,6 +33,16 @@ Sistema inteligente de seguimiento del rendimiento académico integrado con Mood
 - **Filtros (HU-09):** selección de período, búsqueda de cursos y búsqueda y filtro de estudiantes en el dashboard (con alertas, nota final < 14, sin entrega o nota final pendiente). Cada pantalla muestra la fuente y la fecha de los datos (RNF-08). Prototipo del chat y del informe: [`docs/PROTOTIPO_CHAT_INFORME.md`](docs/PROTOTIPO_CHAT_INFORME.md).
 - **Alertas configurables (HU-10):** reglas deterministas de descenso, atraso y baja finalización con evidencia verificable.
 - **Análisis grupal (HU-11):** actividades con resultados bajos, tendencias entre actividades y hallazgos descriptivos.
+
+### Sprint 3 — Agente de IA, informe y auditoría
+
+- **Agente académico (HU-12, HU-13):** el docente pregunta en lenguaje natural en **Asistente**. El agente usa 5 herramientas controladas ([`docs/agent-tools-contracts.json`](docs/agent-tools-contracts.json)) que leen la API **con el JWT del docente**, así que tiene exactamente sus permisos (RN-12). En preguntas generales consulta resumen, alertas y progreso.
+- **Respuestas transparentes (HU-14):** cada respuesta separa **hechos**, **inferencias** y **recomendaciones**, con fuentes, fecha de corte, advertencias y la traza de herramientas. Un verificador descarta las afirmaciones con cifras que no aparecen en los datos (RN-09).
+- **Recomendaciones justificadas (HU-15):** el backend calcula recomendaciones deterministas (acción + indicador, p. ej. *logro 52.0 % < 60 %*); el agente las usa como base.
+- **Informe del período (HU-16):** curso, período, docente, fecha de corte, fuente, métricas, hallazgos, alertas y recomendaciones, con botón **Descargar PDF**.
+- **Auditoría (HU-17):** el administrador consulta accesos, consultas académicas, cambios y herramientas usadas por el agente, con filtros y paginación. Nunca se guardan contraseñas, tokens, notas ni las preguntas.
+- **Gemini opcional para la demostración:** selector **Local / Gemini** en el chat. Con Gemini (clave en `GEMINI_API_KEY`), los nombres de los estudiantes se seudonimizan antes de enviarse y, si no responde, contesta el modelo local. Respuestas de 2–8 s frente a 15–35 s del modelo local.
+- **IA local (RN-11):** el modelo corre en el equipo con Ollama (`qwen2.5:7b` por defecto). Evaluación con el modelo real: [`docs/EVALUACION_AGENTE.md`](docs/EVALUACION_AGENTE.md).
 
 ### Reglas académicas UTA
 
@@ -83,6 +93,16 @@ docker compose ps
 ```
 
 `edumonitor_db` debe aparecer como `healthy`.
+
+### 3b. Preparar el modelo de IA (Sprint 3)
+
+Ollama se instala en el equipo (fuera de Docker) desde https://ollama.com y se descarga el modelo una vez:
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+El AIService lo usa en `http://host.docker.internal:11434` (Docker) o `http://localhost:11434` (`dotnet run`). Se puede cambiar con `OLLAMA_MODELO` en `.env`. Sin Ollama, el resto del sistema funciona y el asistente muestra que la IA no está disponible.
 
 ### 4. Configurar secretos del backend (una sola vez)
 
@@ -140,6 +160,11 @@ El backend aplica migraciones/DDL y siembra datos de demostración al iniciar en
 | PUT | `/api/usuarios/docentes/{id}/estado` | Admin | Activar o desactivar la cuenta. |
 | POST | `/api/usuarios/docentes/{id}/desbloquear` | Admin | Quitar el bloqueo por intentos fallidos. |
 | POST | `/api/usuarios/docentes/{id}/restablecer-clave` | Admin | Asignar una nueva clave temporal. |
+| GET | `/api/analisis/curso/{cursoId}/recomendaciones` | Docente propietario | Recomendaciones deterministas justificadas (HU-15). |
+| GET | `/api/informes/curso/{cursoId}` | Docente propietario | Informe del período con fecha de corte (HU-16). |
+| GET | `/api/auditoria?categoria=&usuario=&resultado=&desde=&hasta=&pagina=&tamano=` | Admin | Registros de auditoría paginados (HU-17). |
+| POST | `/api/ia/chat` | Docente | Pregunta al agente (AIService). |
+| GET | `/api/ia/estado` | Autenticado | Estado del agente, de Ollama y del modelo (AIService). |
 
 Respuestas de autorización: `401` sin token, `403` curso ajeno o rol insuficiente, `404` recurso inexistente.
 
@@ -151,9 +176,18 @@ El contrato completo con esquemas y ejemplos está en [`docs/openapi.yaml`](docs
 dotnet test EduMonitor.slnx
 ```
 
-- **86 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory).
+- **213 pruebas** unitarias y de integración (xUnit + `WebApplicationFactory` + base InMemory): 88 del backend, 104 del agente y 21 de MoodleService.
 - `backend.Tests/AnaliticaServiceTests.cs`: ponderación 40/30/30, nota final, estados, alertas, tendencias y escalas.
 - `backend.Tests/Sprint2EndpointsTests.cs`: consulta de actividades y calificaciones en solo lectura, permisos por curso, dashboard, ficha, alertas, reglas y filtros.
+- `backend.Tests/RecomendacionesTests.cs`: recomendaciones deterministas (TDD).
+- `backend.Tests/Sprint3EndpointsTests.cs`: informe, auditoría (sin secretos, paginada), permisos y tiempos de respuesta.
+- `AIService.Tests/`: orquestador del agente con modelo y backend simulados (herramientas, permisos, fallos, verificador de cifras, contratos y compatibilidad con modelos que escriben las llamadas como texto).
+
+Evaluación del agente con el modelo real (requiere backend, AIService y Ollama en ejecución):
+
+```bash
+node docs/evaluacion/evaluar-agente.mjs <correo-docente> <clave> <cursoId> docs/evaluacion/resultado-<modelo>.json
+```
 
 Validar el frontend:
 
@@ -180,11 +214,15 @@ Los scripts SQL reproducibles están en:
 - `docs/sql/04-actividades-calificaciones.sql`
 - `docs/sql/05-reglas-alerta.sql`
 - `docs/sql/06-integracion-moodle.sql`
+- `docs/sql/07-auditoria.sql`
 
 ## Documentación adicional
 
 - [`PLANIFICACION_SPRINT_01.md`](PLANIFICACION_SPRINT_01.md) — alcance del primer incremento.
 - [`PLANIFICACION_SPRINT_02.md`](PLANIFICACION_SPRINT_02.md) — alcance, reglas, arquitectura y criterios de aceptación del Sprint 2.
+- [`PLANIFICACION_SPRINT_03.md`](PLANIFICACION_SPRINT_03.md) — agente de IA, informe, auditoría y cierre del proyecto.
+- [`docs/EVALUACION_AGENTE.md`](docs/EVALUACION_AGENTE.md) — evaluación del agente con el modelo real (TT-11).
+- [`docs/MATRIZ_CUMPLIMIENTO.md`](docs/MATRIZ_CUMPLIMIENTO.md) — cumplimiento de RF, RNF y reglas de negocio con su evidencia (TT-12).
 - [`docs/LOGIN.md`](docs/LOGIN.md) — arquitectura de autenticación y ejecución.
 - [`DESIGN.md`](DESIGN.md) — lineamientos visuales y prototipo de baja fidelidad del chat e informe.
 

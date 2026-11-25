@@ -2,7 +2,7 @@
 
 **Sprint:** 2 · **Historias que prepara:** HU-12 a HU-16 (Sprint 3) · **Requisitos:** RF-09, RF-10, RF-11, RNF-04, RNF-08 · **Reglas:** RN-07, RN-09, RN-11
 
-Este prototipo define la estructura y el comportamiento de las dos pantallas del Sprint 3 antes de programarlas. En el frontend ya existen como **vista previa** (`frontend/src/components/ModuloPreview.jsx`) en las rutas `/agente` e `/informe` del docente. El estilo visual sigue `DESIGN.md`.
+Este prototipo definió la estructura y el comportamiento de las dos pantallas del Sprint 3 antes de programarlas (en el Sprint 2 se mostraron como vista previa). **En el Sprint 3 se implementaron** en `frontend/src/pages/Agente.jsx` (`/agente`) e `Informe.jsx` (`/informe`). El estilo visual sigue `DESIGN.md`.
 
 ---
 

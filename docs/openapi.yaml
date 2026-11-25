@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: EduMonitor AI - REST API
   description: API del sistema inteligente de seguimiento y análisis del rendimiento académico (UTA).
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: http://localhost:5000
     description: Servidor de desarrollo local
@@ -982,6 +982,246 @@ components:
           items:
             type: string
 
+    # --- Sprint 3: recomendaciones (HU-15), informe (HU-16), auditoría (HU-17) y agente (HU-12 a HU-14) ---
+    RecomendacionDto:
+      type: object
+      description: Recomendación determinista con la acción y el indicador que la justifica (RN-03).
+      properties:
+        tipo:
+          type: string
+          enum: [estudiante, actividad, componente, grupo]
+        prioridad:
+          type: string
+          enum: [alta, media]
+        accion:
+          type: string
+          example: Retroalimentar al grupo los contenidos de «Lección 3» (parcial 2) antes de la siguiente evaluación.
+        justificacion:
+          type: string
+          example: El logro promedio fue 52.0 % con 8 estudiante(s) calificados, por debajo del umbral del 60 %.
+        indicador:
+          type: string
+          example: logro 52.0 % < 60 %
+        estudianteId:
+          type: integer
+          nullable: true
+        estudianteNombre:
+          type: string
+          nullable: true
+        actividadId:
+          type: integer
+          nullable: true
+    RecomendacionesCursoDto:
+      type: object
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        fechaCalculo:
+          type: string
+          format: date-time
+        recomendaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecomendacionDto'
+        advertencias:
+          type: array
+          items:
+            type: string
+    InformeCursoDto:
+      type: object
+      description: Informe del período. Todas las secciones comparten la misma fecha de corte (RNF-08).
+      properties:
+        cursoId:
+          type: integer
+        cursoNombre:
+          type: string
+        cursoCodigo:
+          type: string
+        periodo:
+          type: string
+        paralelo:
+          type: string
+          nullable: true
+        docenteNombre:
+          type: string
+        fechaCorte:
+          type: string
+          format: date-time
+        fuenteDatos:
+          type: string
+          example: Moodle (sincronización automática)
+        fechaSincronizacion:
+          type: string
+          format: date-time
+          nullable: true
+        urlMoodle:
+          type: string
+          nullable: true
+        metricas:
+          $ref: '#/components/schemas/DashboardCursoDto'
+        analisis:
+          $ref: '#/components/schemas/AnalisisGrupalDto'
+        alertas:
+          $ref: '#/components/schemas/AlertasCursoDto'
+        recomendaciones:
+          $ref: '#/components/schemas/RecomendacionesCursoDto'
+    RegistroAuditoriaDto:
+      type: object
+      description: Evento de auditoría. Nunca contiene contraseñas, tokens ni notas.
+      properties:
+        id:
+          type: integer
+          format: int64
+        fecha:
+          type: string
+          format: date-time
+        usuarioId:
+          type: integer
+          nullable: true
+        usuarioCorreo:
+          type: string
+          nullable: true
+        rol:
+          type: string
+          nullable: true
+        categoria:
+          type: string
+          enum: [acceso, consulta, cambio, agente]
+        accion:
+          type: string
+          example: alertas.porcurso
+        recurso:
+          type: string
+          nullable: true
+          example: curso/3
+        detalle:
+          type: string
+          nullable: true
+          example: herramienta=identificar_alertas; consulta=688b9641f602
+        resultado:
+          type: string
+          enum: [exito, denegado, fallido, no_encontrado, rechazado, error]
+        codigoHttp:
+          type: integer
+          nullable: true
+    PaginaAuditoriaDto:
+      type: object
+      properties:
+        total:
+          type: integer
+        pagina:
+          type: integer
+        tamano:
+          type: integer
+        registros:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistroAuditoriaDto'
+    PeticionChat:
+      type: object
+      required: [mensaje]
+      properties:
+        mensaje:
+          type: string
+          minLength: 2
+          maxLength: 1000
+          example: ¿Qué estudiantes necesitan apoyo esta semana?
+        cursoId:
+          type: integer
+          nullable: true
+          description: Curso activo del docente; el agente lo usa por defecto.
+        historial:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            properties:
+              rol:
+                type: string
+                enum: [docente, agente]
+              texto:
+                type: string
+    RespuestaAgenteDto:
+      type: object
+      description: Respuesta del agente con hechos, inferencias y recomendaciones separados (HU-14, RN-09).
+      properties:
+        estado:
+          type: string
+          enum: [ok, sin_acceso, sin_datos, error_herramientas]
+        mensaje:
+          type: string
+          nullable: true
+        hechos:
+          type: array
+          items:
+            type: object
+            properties:
+              texto:
+                type: string
+              fuente:
+                type: string
+                nullable: true
+        inferencias:
+          type: array
+          items:
+            type: string
+        recomendaciones:
+          type: array
+          items:
+            type: object
+            properties:
+              accion:
+                type: string
+              justificacion:
+                type: string
+        fuentes:
+          type: array
+          items:
+            type: string
+        fechaCorte:
+          type: string
+          format: date-time
+          nullable: true
+        advertencias:
+          type: array
+          items:
+            type: string
+        traza:
+          type: array
+          items:
+            type: object
+            properties:
+              herramienta:
+                type: string
+              argumentos:
+                type: string
+              exito:
+                type: boolean
+              codigoHttp:
+                type: integer
+                nullable: true
+              duracionMs:
+                type: integer
+              error:
+                type: string
+                nullable: true
+              origen:
+                type: string
+                enum: [modelo, orquestador]
+        modelo:
+          type: string
+          example: qwen2.5:7b
+        consultaId:
+          type: string
+        duracionMs:
+          type: integer
+
 paths:
   /api/auth/login:
     post:
@@ -1669,3 +1909,159 @@ paths:
           description: Curso ajeno al docente autenticado o usuario administrador
         '404':
           description: El estudiante no está en el curso o no tiene foto
+
+  # --- Sprint 3 ---
+  /api/analisis/curso/{cursoId}/recomendaciones:
+    get:
+      summary: Recomendaciones deterministas del curso
+      description: Acciones concretas justificadas con indicadores (HU-15, RF-10). No usan el modelo de lenguaje (RN-03).
+      tags: [Análisis]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Recomendaciones ordenadas por prioridad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecomendacionesCursoDto'
+        '403':
+          description: Curso ajeno al docente autenticado o usuario administrador
+        '404':
+          description: Curso no encontrado
+
+  /api/informes/curso/{cursoId}:
+    get:
+      summary: Informe del período del curso
+      description: >-
+        Compone el dashboard, el análisis grupal, las alertas y las recomendaciones con una sola fecha de corte
+        y la fuente de los datos (HU-16, RF-11). El frontend lo descarga en PDF.
+      tags: [Informes]
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CursoId'
+      responses:
+        '200':
+          description: Informe del curso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InformeCursoDto'
+        '401':
+          description: Sin token
+        '403':
+          description: Curso ajeno al docente autenticado o usuario administrador
+        '404':
+          description: Curso no encontrado
+
+  /api/auditoria:
+    get:
+      summary: Registros de auditoría
+      description: >-
+        Accesos, consultas académicas, cambios de configuración y herramientas usadas por el agente (HU-17, RF-12).
+        Del más reciente al más antiguo, paginado. Solo Administrador Técnico.
+      tags: [Auditoría]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: categoria
+          in: query
+          schema:
+            type: string
+            enum: [acceso, consulta, cambio, agente]
+        - name: accion
+          in: query
+          schema:
+            type: string
+        - name: usuario
+          in: query
+          description: Parte del correo del usuario
+          schema:
+            type: string
+        - name: resultado
+          in: query
+          schema:
+            type: string
+        - name: desde
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: hasta
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: tamano
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Página de registros
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaAuditoriaDto'
+        '401':
+          description: Sin token
+        '403':
+          description: El usuario no es Administrador Técnico
+
+  /api/ia/chat:
+    post:
+      summary: Preguntar al agente académico (AIService, puerto 5100)
+      description: >-
+        El agente consulta las herramientas de docs/agent-tools-contracts.json con el JWT del docente (RN-12),
+        usa un modelo local de Ollama (RN-11) y responde con hechos, inferencias y recomendaciones verificados
+        contra los datos (RN-09). Servido por AIService; nginx lo expone en /api/ia/.
+      tags: [Agente IA]
+      servers:
+        - url: http://localhost:5100
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeticionChat'
+      responses:
+        '200':
+          description: Respuesta del agente (también para sin_acceso, sin_datos y error_herramientas)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaAgenteDto'
+        '400':
+          description: Pregunta vacía, demasiado larga o JSON inválido
+        '401':
+          description: Sin token
+        '403':
+          description: El usuario no es Docente
+        '503':
+          description: El modelo de lenguaje local no está disponible
+
+  /api/ia/estado:
+    get:
+      summary: Estado del agente, de Ollama y del modelo configurado (AIService)
+      tags: [Agente IA]
+      servers:
+        - url: http://localhost:5100
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Estado (operativo o degradado)

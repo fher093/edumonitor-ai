@@ -35,8 +35,8 @@ const NAV_DOCENTE = [
   {
     grupo: 'Asistencia IA',
     items: [
-      { to: '/agente', etiqueta: 'Asistente', icono: IconAgente, pronto: true },
-      { to: '/informe', etiqueta: 'Informes', icono: IconInforme, pronto: true },
+      { to: '/agente', etiqueta: 'Asistente', icono: IconAgente },
+      { to: '/informe', etiqueta: 'Informe', icono: IconInforme },
     ],
   },
   {
@@ -58,7 +58,7 @@ const NAV_ADMIN = [
     grupo: 'Sistema',
     items: [
       { to: '/admin/servicios', etiqueta: 'Servicios', icono: IconServicios },
-      { to: '/admin/auditoria', etiqueta: 'Auditoría', icono: IconAuditoria, pronto: true },
+      { to: '/admin/auditoria', etiqueta: 'Auditoría', icono: IconAuditoria },
     ],
   },
 ]

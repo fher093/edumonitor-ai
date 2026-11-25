@@ -180,3 +180,46 @@ public record AnalisisGrupalDto(
     List<TendenciaAnalisisDto> Tendencias,
     List<string> Hallazgos,
     List<string> Advertencias);
+
+/// <summary>
+/// Recomendación determinista (HU-15 / RF-10): acción concreta + indicador que la justifica.
+/// Tipo: estudiante | actividad | componente | grupo. Prioridad: alta | media.
+/// </summary>
+public record RecomendacionDto(
+    string Tipo,
+    string Prioridad,
+    string Accion,
+    string Justificacion,
+    string Indicador,
+    int? EstudianteId,
+    string? EstudianteNombre,
+    int? ActividadId);
+
+public record RecomendacionesCursoDto(
+    int CursoId,
+    string CursoNombre,
+    string CursoCodigo,
+    string Periodo,
+    DateTime FechaCalculo,
+    List<RecomendacionDto> Recomendaciones,
+    List<string> Advertencias);
+
+/// <summary>
+/// Informe del período (HU-16 / RF-11). No recalcula nada: compone los mismos cálculos del dashboard,
+/// del análisis grupal, de las alertas y de las recomendaciones, con la fecha de corte y la fuente (RNF-08).
+/// </summary>
+public record InformeCursoDto(
+    int CursoId,
+    string CursoNombre,
+    string CursoCodigo,
+    string Periodo,
+    string? Paralelo,
+    string DocenteNombre,
+    DateTime FechaCorte,
+    string FuenteDatos,
+    DateTime? FechaSincronizacion,
+    string? UrlMoodle,
+    DashboardCursoDto Metricas,
+    AnalisisGrupalDto Analisis,
+    AlertasCursoDto Alertas,
+    RecomendacionesCursoDto Recomendaciones);

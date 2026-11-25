@@ -18,6 +18,11 @@
 | Etiquetas | Texto de 12px en gris, en tipo de oración | Sin mayúsculas ni tipografía mono en los títulos de sección. |
 | Movimiento | Transiciones suaves de 0.2–0.45s; sin animaciones decorativas | Se retiró el borde conic animado. |
 | Estructura | Pantallas de alto fijo, paneles lista ↔ detalle, modales para el detalle secundario | Evita el scroll largo de página. |
+| Asistente IA: contenido | Respuesta directa arriba; luego solo las secciones con contenido (hechos, inferencias, recomendaciones); material generado en un bloque aparte con botón Copiar | Lo esencial primero; sin secciones vacías ([NN/g](https://nngroup.com/articles/ai-chatbots-design-guidelines)). |
+| Asistente IA: sin datos técnicos | No se muestran el nombre del modelo, los tiempos, la traza de herramientas ni los avisos internos de verificación; quedan en la API y en Auditoría | Al docente no le sirven y recargan la vista. |
+| Asistente IA: transparencia | Una sola línea al pie: "Basado en: … · datos al …" | Permite verificar sin repetir la fuente en cada línea (RNF-08; [Cloudscape](https://cloudscape.design/patterns/genai/generative-AI-chat/)). |
+| Asistente IA: guía | Bienvenida con lo que el asistente sabe hacer, 4 sugerencias variadas y mensajes de espera por etapa | Evita adivinar el alcance y la sensación de bloqueo ([NN/g: sugerencias](https://www.nngroup.com/articles/prompt-suggestions/)). |
+| Asistente IA: modelo | Selector "Local · privado / Gemini · rápido": describe la diferencia, no el nombre técnico | El docente elige por privacidad o velocidad. |
 
 ---
 

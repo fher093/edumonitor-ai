@@ -9,7 +9,9 @@ import Actividades from './pages/Actividades.jsx'
 import Resumen from './pages/Resumen.jsx'
 import Estudiantes from './pages/Estudiantes.jsx'
 import MisCursos from './pages/MisCursos.jsx'
-import ModuloIA from './pages/ModuloIA.jsx'
+import Agente from './pages/Agente.jsx'
+import Informe from './pages/Informe.jsx'
+import AdminAuditoria from './pages/AdminAuditoria.jsx'
 import Alertas from './pages/Alertas.jsx'
 import Analisis from './pages/Analisis.jsx'
 import AdminReglas from './pages/AdminReglas.jsx'
@@ -42,8 +44,8 @@ export default function App() {
           <Route path="/alertas" element={<Alertas />} />
           <Route path="/analisis" element={<Analisis />} />
           <Route path="/cursos" element={<MisCursos />} />
-          <Route path="/agente" element={<ModuloIA tipo="agente" />} />
-          <Route path="/informe" element={<ModuloIA tipo="informe" />} />
+          <Route path="/agente" element={<Agente />} />
+          <Route path="/informe" element={<Informe />} />
           {/* Rutas anteriores al rediseño */}
           <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />
           <Route path="/matricula" element={<Navigate to="/estudiantes" replace />} />
@@ -57,7 +59,7 @@ export default function App() {
           <Route path="/admin/moodle" element={<AdminMoodle />} />
           <Route path="/admin/reglas-alertas" element={<AdminReglas />} />
           <Route path="/admin/servicios" element={<AdminHome />} />
-          <Route path="/admin/auditoria" element={<AdminHome />} />
+          <Route path="/admin/auditoria" element={<AdminAuditoria />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>

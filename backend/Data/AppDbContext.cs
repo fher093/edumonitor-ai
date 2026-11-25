@@ -14,6 +14,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Calificacion> Calificaciones => Set<Calificacion>();
     public DbSet<ReglaAlerta> ReglasAlerta => Set<ReglaAlerta>();
     public DbSet<SincronizacionMoodle> SincronizacionesMoodle => Set<SincronizacionMoodle>();
+    public DbSet<RegistroAuditoria> RegistrosAuditoria => Set<RegistroAuditoria>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -125,6 +126,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Nombre).HasMaxLength(150).IsRequired();
             e.Property(x => x.ParametrosJson).HasMaxLength(400).IsRequired();
             e.HasIndex(x => x.Tipo).IsUnique();
+        });
+
+        modelBuilder.Entity<RegistroAuditoria>(e =>
+        {
+            e.ToTable("RegistrosAuditoria");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.UsuarioCorreo).HasMaxLength(254);
+            e.Property(x => x.Rol).HasMaxLength(40);
+            e.Property(x => x.Categoria).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Accion).HasMaxLength(80).IsRequired();
+            e.Property(x => x.Recurso).HasMaxLength(200);
+            e.Property(x => x.Detalle).HasMaxLength(500);
+            e.Property(x => x.Resultado).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Ip).HasMaxLength(45);
+            e.HasIndex(x => x.Fecha);
+            e.HasIndex(x => new { x.Categoria, x.Fecha });
         });
     }
 }

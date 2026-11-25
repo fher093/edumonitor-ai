@@ -19,6 +19,7 @@ public class SincronizacionController(
     IOptions<SincronizacionAutomaticaOptions> automatica) : ControllerBase
 {
     /// <summary>Ejecuta la sincronización y devuelve su registro (fecha, contadores y errores).</summary>
+    [Auditar(CategoriasAuditoria.Cambio, Accion = "sincronizacion.moodle")]
     [HttpPost]
     [Authorize(Roles = RolNombres.AdministradorTecnico)]
     [ProducesResponseType<SincronizacionMoodleDto>(StatusCodes.Status200OK)]

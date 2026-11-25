@@ -15,6 +15,7 @@ namespace Backend.Controllers;
 [ApiController]
 [Route("api")]
 [Authorize(Roles = RolNombres.Docente)]
+[Auditar]
 public class ActividadesController(AppDbContext db, AnaliticaProvider analitica)
     : ControladorAcademicoBase(db, analitica)
 {
